@@ -108,4 +108,17 @@ RSpec.describe Game, type: :model do
     game.ask_for_tricks('Auro', 2)
     expect { game.register_tricks('Pedro', 1) }.to raise_error(ArgumentError, "Cannot register tricks if all players have not asked for tricks")
   end
+
+  it "know how many points each player had per round" do
+    game.start()
+    game.ask_for_tricks('Pedro', 1)
+    game.ask_for_tricks('Auro', 2)
+    game.ask_for_tricks('Leon', 0)
+    game.register_tricks('Pedro', 1)
+    game.register_tricks('Auro', 2)
+    game.register_tricks('Leon', 1)
+    expect(game.current_round.points).to eq({ 'Pedro' => 12, 'Auro' => 14, 'Leon' => 1 })
+  end
+
+
 end

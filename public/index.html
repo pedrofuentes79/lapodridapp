@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LaPodridApp</title>
+    <style>
+        .round-input {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>LaPodridApp</h1>
+    
+    <div>
+        <h2>Nueva partida</h2>
+        <div>
+            <h3>Jugadores</h3>
+            <div id="players-container"></div>
+            <button onclick="addPlayer()">Agregar jugador</button>
+        </div>
+
+        <div>
+            <h3>Rondas</h3>
+            <div id="rounds-container"></div>
+            <button onclick="addRound()">Agregar ronda</button>
+        </div>
+
+        <button onclick="startGame()">Empezar juego</button>
+    </div>
+
+    <div id="gameState"></div>
+
+    <script>
+        function addPlayer() {
+            const container = document.getElementById('players-container');
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'player-input';
+            playerDiv.innerHTML = `
+                <input type="text" placeholder="Jugador ${container.children.length + 1}" class="player-name">
+            `;
+            container.appendChild(playerDiv);
+        }
+        function addRound() {
+            const container = document.getElementById('rounds-container');
+            const roundDiv = document.createElement('div');
+            roundDiv.className = 'round-input';
+            roundDiv.innerHTML = `
+                Round ${container.children.length + 1}:
+                <input type="number" min="1" placeholder="Cards" class="cards-amount">
+                <label>
+                    <input type="checkbox" class="no-trump"> Sin triunfo
+                </label>
+            `;
+            container.appendChild(roundDiv);
+        }
+
+        async function startGame() {
+            console.log('starting game...')
+            const players = [
+                document.getElementById('player1').value,
+                document.getElementById('player2').value,
+                document.getElementById('player3').value
+            ].filter(p => p);
+
+            const roundsData = {};
+            document.querySelectorAll('.round-input').forEach((roundDiv, index) => {
+                const cards = roundDiv.querySelector('.cards-amount').value;
+                const noTrump = roundDiv.querySelector('.no-trump').checked;
+                if (cards) {
+                    roundsData[[index + 1, parseInt(cards)]] = noTrump ? 'noTrump' : 'trump';
+                }
+            });
+
+            const response = await fetch('/api/game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    players,
+                    rounds: roundsData
+                })
+            });
+
+            const game = await response.json();
+            document.getElementById('gameState').innerText = JSON.stringify(game, null, 2);
+        }
+
+        // Add defaults
+        addPlayer();
+        addPlayer();
+        addRound();
+    </script>
+</body>
+</html>

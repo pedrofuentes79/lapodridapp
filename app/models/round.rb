@@ -1,5 +1,6 @@
 class Round
-    attr_reader :round_number, :amount_of_cards, :amount_of_asked_tricks, :asked_tricks, :current_player, :tricks_made
+    attr_reader :round_number, :amount_of_cards, :amount_of_asked_tricks,
+                :asked_tricks, :current_player, :tricks_made, :points
 
     def initialize(game, round_number, amount_of_cards, is_trump, starting_player)
         @game = game
@@ -22,7 +23,7 @@ class Round
         validate_player_turn!(player)
         validate_asked_tricks_amount!(tricks_asked_by_player)
         advance_turn
-        
+
         @amount_of_asked_tricks += tricks_asked_by_player
         @asked_tricks[player] = tricks_asked_by_player
     end
@@ -32,9 +33,32 @@ class Round
         validate_tricks_made_amount!(tricks_made_by_player)
 
         @tricks_made[player] = tricks_made_by_player
+
+        if is_last_player?
+          calculate_points
+        end
     end
+
     private
 
+    def calculate_points
+      # uses game.strategy to calculate points for each player
+      @points = {}
+      for player in @asked_tricks.keys
+        @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
+      end
+    end
+   
+
+    def advance_turn
+        @current_player = @game.next_player_to(@current_player)
+    end
+
+    def is_last_player?
+        @tricks_made.keys.length == @game.players.length
+    end
+
+    # region VALIDATIONS
     def validate_player_turn!(player)
         raise ArgumentError, "Wrong player turn. Expected #{@current_player}, got #{player}" unless player == @current_player
     end
@@ -53,7 +77,5 @@ class Round
         raise ArgumentError, "Cannot register tricks if all players have not asked for tricks" unless @asked_tricks.keys.length == @game.players.length
     end
 
-    def advance_turn
-        @current_player = @game.next_player_to(@current_player)
-    end
+    # endregion
 end
