@@ -1,0 +1,52 @@
+<table class="game-table">
+    <thead>
+        <tr>
+            <th>Ronda</th>
+            <% @game.players.each do |player| %>
+                <th><%= player %></th>
+            <% end %>
+        </tr>
+    </thead>
+    <tbody>
+        <% @game.rounds.each do |index, round| %>
+            <tr>
+                <%# round number %>
+                <td class="<%= round.is_trump? ? 'trump-round' : 'no-trump-round' %>">                    
+                    <%= round.amount_of_cards %>
+                </td>
+
+                <%# round cell %>
+                <% @game.players.each do |player| %>
+                    <td class="<%= 'starting-player' if round.starting_player == player %>">
+                        <div class="points-cell">
+                            <span class="points"><%= round.points[player] || "-" %></span>
+                            <span class="tricks-superindex">
+                                <% if @game.current_round == round && round.current_player == player %>
+                                    <% if round.asked_tricks[player].nil? %>
+                                        <input type="number" min="0" max="<%= round.amount_of_cards %>" 
+                                               onchange="askForTricks('<%= player %>', this.value)">
+                                    <% else %>
+                                        <%= round.asked_tricks[player] %>
+                                    <% end %>
+                                <% else %>
+                                    <%= round.asked_tricks[player] || "-" %>
+                                <% end %>
+                                /
+                                <% if @game.current_round == round && round.current_player == player && !round.asked_tricks[player].nil? %>
+                                    <input type="number" min="0" max="<%= round.amount_of_cards %>" 
+                                           onchange="registerTricks('<%= player %>', this.value)">
+                                <% else %>
+                                    <%= round.tricks_made[player] || "-" %>
+                                <% end %>
+                            </span>
+                        </div>
+                    </td>
+                <% end %>
+            </tr>
+        <% end %>
+    </tbody>
+</table>
+
+
+<%# inspect game %>
+<pre><%= @game.current_round.inspect %></pre>

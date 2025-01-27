@@ -46,7 +46,7 @@
             roundDiv.className = 'round-input';
             roundDiv.innerHTML = `
                 Round ${container.children.length + 1}:
-                <input type="number" min="1" placeholder="Cards" class="cards-amount">
+                <input type="number" min="1" placeholder="#Cartas" class="cards-amount">
                 <label>
                     <input type="checkbox" class="no-trump"> Sin triunfo
                 </label>
@@ -56,11 +56,14 @@
 
         async function startGame() {
             console.log('starting game...')
-            const players = [
-                document.getElementById('player1').value,
-                document.getElementById('player2').value,
-                document.getElementById('player3').value
-            ].filter(p => p);
+            // get all players
+            const players = [];
+            document.querySelectorAll('.player-name').forEach(playerInput => {
+                const name = playerInput.value;
+                if (name) {
+                    players.push(name);
+                }
+            });
 
             const roundsData = {};
             document.querySelectorAll('.round-input').forEach((roundDiv, index) => {
@@ -82,8 +85,11 @@
                 })
             });
 
-            const game = await response.json();
-            document.getElementById('gameState').innerText = JSON.stringify(game, null, 2);
+            if (response.redirected) {
+                window.location.href = response.url; // Perform a manual redirect
+            } else {
+                console.log('Something went wrong:', response.status);
+            }
         }
 
         // Add defaults

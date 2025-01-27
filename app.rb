@@ -5,7 +5,7 @@ require 'securerandom'
 
 set :public_folder, 'public'
 set :views, File.join(File.dirname(__FILE__), 'app/views')
-set :erb, :layout => :'layouts/application'
+set :erb, :layout => :'layouts/application.html'
 
 # Enable JSON body parsing
 before do
@@ -21,14 +21,12 @@ end
 
 post '/api/game' do
   content_type :json
-  puts "Request payload: #{@request_payload.inspect}"
   players = @request_payload['players']
-  puts "Players: #{players.inspect}"
+  rounds = @request_payload['rounds']
+  puts "Creating game with players #{players} and rounds #{rounds}"
 
-  game = Game.new(players)
-  puts game.id
+  game = Game.new(players, rounds)
   game.start
-
 
   redirect "/game/#{game.id}"
 end
@@ -36,4 +34,32 @@ end
 get '/game/:id' do
   @game = Game.find(params[:id])
   erb :game
+end
+
+post '/api/ask_for_tricks' do
+  content_type :json
+  player = @request_payload['player']
+  tricks = @request_payload['tricks'].to_i
+
+  begin
+    @game.current_round.ask_for_tricks(player, tricks)
+    status 200
+  rescue => e
+    status 400
+    { error: e.message }.to_json
+  end
+end
+
+post '/api/register_tricks' do
+  content_type :json
+  player = @request_payload['player']
+  tricks = @request_payload['tricks'].to_i
+
+  begin
+    @game.current_round.register_tricks(player, tricks)
+    status 200
+  rescue => e
+    status 400
+    { error: e.message }.to_json
+  end
 end
