@@ -70,3 +70,12 @@
     border: 2px solid #1e90ff; /* Darker blue border */
     font-weight: bold;
 }
+
+#leaderboard-table {
+    width: auto;
+    margin-left: 0;
+}
+
+#leaderboard-table th.player-column {
+    width: 10px; /* Set a specific width for the Player column */
+}

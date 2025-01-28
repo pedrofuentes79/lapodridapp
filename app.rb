@@ -23,7 +23,6 @@ post '/api/game' do
   content_type :json
   players = @request_payload['players']
   rounds = @request_payload['rounds']
-  puts "Creating game with players #{players} and rounds #{rounds}"
 
   game = Game.new(players, rounds)
   game.start
@@ -43,7 +42,7 @@ post '/api/ask_for_tricks' do
   game = Game.find(@request_payload['game_id'])
 
   begin
-    game.current_round.ask_for_tricks(player, tricks)
+    game.ask_for_tricks(player, tricks)
     status 200
   rescue => e
     status 400
@@ -58,10 +57,17 @@ post '/api/register_tricks' do
   game = Game.find(@request_payload['game_id'])
 
   begin
-    game.current_round.register_tricks(player, tricks)
+    game.register_tricks(player, tricks)
     status 200
   rescue => e
     status 400
     { error: e.message }.to_json
   end
+end
+
+get '/api/leaderboard' do
+  content_type :json
+  game = Game.find(params[:game_id])
+  puts "Leaderboard: #{game.leaderboard.to_json}"
+  game.leaderboard.to_json
 end
