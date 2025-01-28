@@ -18,6 +18,11 @@ class Round
         @is_trump
     end
 
+    def is_current_player(player)
+        @current_player == player
+    end
+
+
     def ask_for_tricks(player, tricks_asked_by_player)
         validate_player_turn!(player)
         validate_asked_tricks_amount!(tricks_asked_by_player)

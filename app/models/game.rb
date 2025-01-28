@@ -2,7 +2,7 @@ require_relative 'strategy'
 require_relative 'round'
 
 class Game
-    attr_reader :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round
+    attr_reader :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round, :current_round_number
 
     @@games = {}
   
@@ -60,9 +60,16 @@ class Game
         @strategy.calculate_points(asked_tricks, tricks_made)
     end
 
+    def is_current_round(round)
+        @current_round.round_number == round.round_number
+    end
 
     def next_round
         current_round_number = @current_round.round_number
+        if current_round_number == @max_round_number
+            puts "Game over"
+            return
+        end
         @current_round = @rounds[current_round_number + 1]
     end
 

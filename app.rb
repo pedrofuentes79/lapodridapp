@@ -33,16 +33,17 @@ end
 
 get '/game/:id' do
   @game = Game.find(params[:id])
-  erb :game
+  erb :spreadsheet
 end
 
 post '/api/ask_for_tricks' do
   content_type :json
   player = @request_payload['player']
   tricks = @request_payload['tricks'].to_i
+  game = Game.find(@request_payload['game_id'])
 
   begin
-    @game.current_round.ask_for_tricks(player, tricks)
+    game.current_round.ask_for_tricks(player, tricks)
     status 200
   rescue => e
     status 400
@@ -54,9 +55,10 @@ post '/api/register_tricks' do
   content_type :json
   player = @request_payload['player']
   tricks = @request_payload['tricks'].to_i
+  game = Game.find(@request_payload['game_id'])
 
   begin
-    @game.current_round.register_tricks(player, tricks)
+    game.current_round.register_tricks(player, tricks)
     status 200
   rescue => e
     status 400
