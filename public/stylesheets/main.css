@@ -1,15 +1,24 @@
 /* General Table Styling */
-.game-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-    font-family: Arial, sans-serif;
+.tables-container {
+    display: flex;
+    justify-content: space-between;
 }
 
-.game-table th, .game-table td {
-    border: 1px solid #ccc; /* Draws the grid lines */
-    padding: 10px;
-    vertical-align: middle;
+.game-table, .info-table {
+    border-collapse: collapse;
+    width: 70%; /* Adjust the width as needed */
+}
+
+.info-table {
+    width: auto; /* Make the table width auto */
+    margin-left: 20px; /* Add some space between the tables */
+    height: auto;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: center;
 }
 
 .game-table th {
@@ -31,7 +40,7 @@
 }
 
 .points {
-    font-size: 20px;
+    font-size: 1.2em;
     font-weight: bold;
     color: #333;
 }
@@ -41,9 +50,14 @@
     font-size: 12px;
     color: #666;
     position: absolute;
-    top: 5px;
+    top: 5px;   
     right: 5px;
     font-style: italic;
+}
+
+.tricks {
+    font-size: 0.8em;
+    vertical-align: super;
 }
 
 /* Hover Effect */
@@ -54,10 +68,9 @@
 
 /* Highlight the starting player's cell */
 .starting-player {
-    background-color: #f0f8ff; /* Light blue background */
-    border: 2px solid #1e90ff; /* Darker blue border */
+    background-color: #f0f8ff;
     font-weight: bold;
-    color: #1e90ff; /* Optional: Text color matching the border */
+    color: #1e90ff;
 }
 
 /* Adjust padding for better visibility */
@@ -65,17 +78,19 @@
     padding: 8px;
 }
 
+
 .no-trump-round {
-    background-color: #d2ec7e; /* Light blue background */
+    background-color: #d2ec7e; /* Light green background */
     border: 2px solid #1e90ff; /* Darker blue border */
     font-weight: bold;
 }
 
+/* Leaderboard specific styles */
 #leaderboard-table {
     width: auto;
     margin-left: 0;
 }
 
 #leaderboard-table th.player-column {
-    width: 10px; /* Set a specific width for the Player column */
+    width: 150px; /* Set a specific width for the Player column */
 }

@@ -18,6 +18,19 @@ class Round
         @is_trump
     end
 
+    def total_tricks_asked
+        asked_tricks.values.compact.sum
+    end
+
+    def last_player_forbidden_value
+        # if current player is last player
+        if is_last_player?(@current_player) and not @asked_tricks.values.all?
+            return @amount_of_cards - @amount_of_asked_tricks
+        else
+            return "-"
+        end
+    end
+
     def is_current_player(player)
         @current_player == player
     end
@@ -46,6 +59,25 @@ class Round
         else
           advance_turn
         end
+    end
+
+    def to_json
+        {
+            round_number: @round_number,
+            amount_of_cards: @amount_of_cards,
+            current_player: @current_player,
+            asked_tricks: @asked_tricks,
+            tricks_made: @tricks_made,
+            points: @points,
+            starting_player: @starting_player
+        }
+    end
+
+    def update_state(state)
+        @current_player = state['current_player']
+        @asked_tricks = state['asked_tricks']
+        @tricks_made = state['tricks_made']
+        @points = state['points']
     end
 
     private
@@ -143,6 +175,26 @@ class NullRound
     end
 
     def register_tricks(player, tricks)
+    end
+
+    def total_tricks_asked
+        0
+    end
+
+    def last_player_forbidden_value
+        "-"
+    end
+
+    def to_json
+        {
+            round_number: @round_number,
+            amount_of_cards: 0,
+            current_player: "",
+            asked_tricks: {},
+            tricks_made: {},
+            points: {},
+            starting_player: ""
+        }
     end
 
 end

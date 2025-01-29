@@ -68,6 +68,12 @@ end
 get '/api/leaderboard' do
   content_type :json
   game = Game.find(params[:game_id])
-  puts "Leaderboard: #{game.leaderboard.to_json}"
   game.leaderboard.to_json
+end
+
+post '/api/update_game_state' do
+  content_type :json
+  game = Game.find(@request_payload['game_id'])
+  game.update_state(@request_payload['game_state'])
+  status 200
 end

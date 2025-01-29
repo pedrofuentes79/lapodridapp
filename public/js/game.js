@@ -1,66 +1,109 @@
 document.addEventListener("DOMContentLoaded", () => {
     const inputs = document.querySelectorAll(".tricks-input");
-    inputs.forEach(input => {
+    const editableElements = document.querySelectorAll(".editable"); 
+
+    // KEYPRESS ENTER SENDS STATE AND MOVES ON TO NEXT INPUT
+    inputs.forEach((input, index) => {
         input.addEventListener("keypress", (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                const player = event.target.id.split("-")[3]; // Extracts player ID
-                const gameId = event.target.getAttribute("game-id");
+                const player = event.target.dataset.player;
+                const gameId = event.target.dataset.gameid;
                 const action = event.target.name; // "askForTricks" or "registerTricks"
                 const value = event.target.value;
                 
-                console.log(`Keypress detected for player: ${player}, game: ${gameId}, value: ${value}, action: ${action}`);
-                handleInput(action, player, value, gameId);
+                updateGameState(action, player, value, gameId);
+                fetchLeaderboard(gameId);
             }
         });
     });
 
-    if (gameStarted) {
-        const gameId = document.querySelector(".points-cell").getAttribute("game-id"); // All inputs have the same game ID
-        console.log(gameId)
-        fetchLeaderboard(gameId);      
-    }
-    
+    // DBLCLICK ON SPAN TURNS INTO INPUT
+    editableElements.forEach((element) => {
+      element.addEventListener("dblclick", (event) => {
+        const span = event.target;
+        const player = span.dataset.player;
+        const round = span.dataset.round;
+        const action = span.dataset.action;
+        const value = span.innerText;
+        const gameId = span.dataset.gameid;
+  
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = value === "-" ? "" : value;
+        input.dataset.player = player;
+        input.dataset.round = round;
+        input.dataset.action = action;
+  
+        input.addEventListener("blur", (event) => {
+          const newValue = event.target.value;
+          span.innerText = newValue === "" ? "-" : newValue;
+          span.style.display = "inline";
+          input.remove();
+          updateGameState(action, player, newValue, gameId);
+        });
+  
+        input.addEventListener("keypress", (event) => {
+          if (event.key === 'Enter') {
+            input.blur();
+          }
+        });
+  
+        span.style.display = "none";
+        span.parentNode.insertBefore(input, span);
+        input.focus();
+      });
+    });
+
+  const roundSelector = document.getElementById("current-round-selector");
+  roundSelector.addEventListener("change", (event) => {
+    const selectedRound = event.target.value;
+    updateCurrentRound(selectedRound);
+  });
 });
 
-function handleInput(action, player, value, gameId) {
-    if (action === 'askForTricks') {
-        askForTricks(player, value, gameId);
-    } else if (action === 'registerTricks') {
-        registerTricks(player, value, gameId);
-    }
+function updateCurrentRound(selectedRound) {
+  const gameState = gameStateFromDOM();
+  gameState.current_round_number = selectedRound;
+  updateDOMGameState(gameState);
+  console.log(gameState)
+  sendGameState(gameState, gameState);
 }
 
-async function askForTricks(player, tricks, gameId) {
-    const response = await fetch('/api/ask_for_tricks', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ player, tricks, game_id: gameId })
-    });
-
-    if (response.ok) {
-        window.location.reload();
-    } else {
-        console.error('Failed to ask for tricks');
-    }
+function sendGameState(gameState, gameId) {
+  console.log('Sending game id', gameId);
+  fetch('/api/update_game_state', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ game_state: gameState, game_id: gameId })
+  });
 }
 
-async function registerTricks(player, tricks, gameId) {
-    const response = await fetch('/api/register_tricks', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ player, tricks, game_id: gameId })
-    });
 
-    if (response.ok) {
-        window.location.reload();
-    } else {
-        console.error('Failed to register tricks');
-    }
+function updateGameState(action, player, value, gameId) {
+  const gameState = gameStateFromDOM();
+  round = gameState.rounds[gameState.current_round_number];
+
+  if (action === 'askForTricks') {
+    round.asked_tricks[player] = parseInt(value, 10);
+  } else if (action === 'registerTricks') {
+    round.tricks_made[player] = parseInt(value, 10);
+  }
+
+  updateDOMGameState(gameState);
+  sendGameState(gameState, gameId);
+
+}
+
+
+function updateDOMGameState(gameState) {
+  document.querySelector('script').innerText = `var gameState = ${JSON.stringify(gameState)};`;
+}
+
+function gameStateFromDOM() {
+  return JSON.parse(document.querySelector('script').innerText.match(/var gameState = (.*);/)[1]);
 }
 
 async function fetchLeaderboard(gameId) {

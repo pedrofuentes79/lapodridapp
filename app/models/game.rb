@@ -22,6 +22,10 @@ class Game
       @strategy = PointCalculationStrategy.new()
     end
 
+    def total_tricks_asked
+        current_round.total_tricks_asked if current_round
+    end
+
     def parse_rounds(rounds)
       return if rounds.nil? || rounds.empty?
 
@@ -80,13 +84,35 @@ class Game
 
 
     def leaderboard
-        @total_points = Hash.new(0)
+        total_points = Hash.new(0)
         @rounds.each_value do |round|
             round.points.each do |player, points|
-                @total_points[player] += points
+                total_points[player] += points
             end
         end
 
-        @total_points.sort_by { |player, points| -points }.to_h
+        total_points.sort_by { |player, points| -points }.to_h
+    end
+
+    def to_json
+        {
+            id: @id,
+            players: @players,
+            current_starting_player: @current_starting_player,
+            rounds: @rounds.map { |round_number, round| [round_number, round.to_json] }.to_h,
+            current_round_number: @current_round.round_number,
+            started: @started
+        }.to_json
+    end
+
+    def update_state(state)
+        @current_starting_player = state['current_starting_player']
+        @current_round = @rounds[state['current_round_number']]
+        @started = state['started']
+        @rounds.each do |round_number, round|
+            round.update_state(state['rounds'][round_number.to_s])
+        end
+
+
     end
 end
