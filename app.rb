@@ -76,4 +76,5 @@ post '/api/update_game_state' do
   game = Game.find(@request_payload['game_id'])
   game.update_state(@request_payload['game_state'])
   status 200
+  game.to_json
 end

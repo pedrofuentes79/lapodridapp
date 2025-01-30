@@ -76,9 +76,9 @@ class Game
         end
     end
 
-    def next_player_to(player)
+    def next_player_to(player, offset)
         current_index = @players.index(player)
-        next_player = @players[(current_index + 1) % @players.length]
+        next_player = @players[(current_index + offset) % @players.length]
         next_player
     end
 

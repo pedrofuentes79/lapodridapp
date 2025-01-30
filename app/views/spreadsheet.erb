@@ -4,20 +4,14 @@
 </script>
 
 <div class="tables-container">
-  <label for="current-round-selector">Select Current Round:</label>
-  <select id="current-round-selector">
-    <% @game.rounds.each do |index, round| %>
-      <option value="<%= index %>" <%= 'selected' if index == @game.current_round.round_number %>>Round <%= index %></option>
-    <% end %>
-  </select>
-
   <table class="game-table">
     <thead>
       <tr>
-        <th>Numero de Cartas</th>
+        <th>Bazas/Cartas</th>
         <% @game.players.each do |player| %>
           <th> <%= player %> </th>
         <% end %>
+        <th>No puede pedir</th>
       </tr>
     </thead>
     <tbody>
@@ -25,7 +19,9 @@
         <tr>
           <%# round number %>
           <td class="<%= round.is_trump? ? 'trump-round' : 'no-trump-round' %>">
-            <%= round.amount_of_cards %>
+            <div class="tricks-cards-ratio">
+              <%= round.total_tricks_asked %>/<%= round.amount_of_cards %>
+            </div>
           </td>
 
           <%# round cell %>
@@ -35,39 +31,36 @@
                 <span class="points"><%= round.points[player] || "-" %></span>
                 <span class="tricks-superindex">
                   <%# MADE TRICKS%>
-                  <span class="editable" data-player="<%= player %>" data-round="<%= index %>" data-action="registerTricks" data-gameid="<%= @game.id %>">
+                  <span class="editable" 
+                        data-player="<%= player %>" 
+                        data-round="<%= index %>" 
+                        data-action="registerTricks" 
+                        data-gameid="<%= @game.id %>"
+                        data-editable="<%= round.asked_tricks.values.all? %>">
                     <%= round.tricks_made[player] || "-" %>
                   </span>
                   /
                   <%# ASKED TRICKS%>
-                  <span class="editable" data-player="<%= player %>" data-round="<%= index %>" data-action="askForTricks" data-gameid="<%= @game.id %>">
+                  <span class="editable" 
+                        data-player="<%= player %>" 
+                        data-round="<%= index %>" 
+                        data-action="askForTricks" 
+                        data-gameid="<%= @game.id %>">
                     <%= round.asked_tricks[player] || "-" %>
                   </span>
                 </span>
               </div>
             </td>
           <% end %>
+          
+          <%# forbidden value cell %>
+          <td class="forbidden-value-cell">
+            <div class="forbidden-value">
+              <%= round.last_player_forbidden_value %>
+            </div>
+          </td>
         </tr>
       <% end %>
-    </tbody>
-  </table>
-
-  <!-- Info Table -->
-  <table class="info-table">
-    <thead>
-      <tr>
-        <th>Información</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Cantidad de bazas pedidas:</td>
-        <td><%= @game.total_tricks_asked %> / <%= @game.current_round.amount_of_cards %>  </td>
-      </tr>
-      <tr>
-        <td>No se pueden pedir:</td>
-        <td><%= @game.current_round.last_player_forbidden_value %></td>
-      </tr>
     </tbody>
   </table>
 </div>
