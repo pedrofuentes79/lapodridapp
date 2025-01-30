@@ -18,6 +18,32 @@ class Round
         @is_trump
     end
 
+    def total_tricks_asked
+        if asked_tricks.values.any?
+            asked_tricks.values.compact.sum
+        else
+            0
+        end
+    end
+
+    def last_player_forbidden_value
+        return "-" unless all_players_asked_except_one?
+        return "-" unless last_player == remaining_player_to_ask_for_tricks
+        @amount_of_cards - total_tricks_asked
+    end
+
+    def last_player
+        @game.next_player_to(@current_player, -1)
+    end
+
+    def remaining_player_to_ask_for_tricks
+        @game.players.find { |player| @asked_tricks[player].nil? }
+    end
+
+    def all_players_asked_except_one?
+        @asked_tricks.values.compact.length == @game.players.length - 1
+    end
+
     def is_current_player(player)
         @current_player == player
     end
@@ -46,6 +72,59 @@ class Round
         else
           advance_turn
         end
+    end
+
+    def to_json
+        {
+            round_number: @round_number,
+            amount_of_cards: @amount_of_cards,
+            current_player: @current_player,
+            asked_tricks: @asked_tricks,
+            tricks_made: @tricks_made,
+            points: @points,
+            starting_player: @starting_player
+        }
+    end
+
+
+    def update_state(state)
+        validate_state!(state)
+        apply_state(state)
+        if state['tricks_made'].values.all?
+            calculate_points
+        end
+    end
+
+    def apply_state(state)
+        @asked_tricks = state['asked_tricks']
+        @tricks_made = state['tricks_made']
+    end
+
+    def validate_state!(state)
+        @game.players.each do |player|
+            validate_asked_tricks_amount!(player, state['asked_tricks'][player], sum_until_player(state, player, 'asked_tricks'))
+            validate_tricks_made_amount!(player, state['tricks_made'][player], sum_until_player(state, player, 'tricks_made')) 
+        end
+    end
+
+    def sum_until_player(state, player, key)
+        # TODO: make this faster
+        starting_index = @game.players.index(@starting_player)
+        # player_index = @game.players.index(player)
+
+        players_until_current = []
+        current_index = @game.players.index(player)
+        
+        i = starting_index
+        while i != current_index
+            players_until_current << @game.players[i]
+            i = (i + 1) % @game.players.length
+        end
+        
+        players_until_current
+            .map { |aPlayer| state[key][aPlayer] }
+            .compact
+            .sum(0)
     end
 
     private
@@ -90,12 +169,16 @@ class Round
         raise ArgumentError, "Wrong player turn. Expected #{@current_player}, got #{player}" unless player == @current_player
     end
 
-    def validate_asked_tricks_amount!(player, tricks_asked_by_player)
+    def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player)
+        if tricks_asked_by_player.nil?
+            return
+        end
+
         if tricks_asked_by_player > @amount_of_cards
             puts "Total asked tricks cannot surpass number of cards in the round"
             raise ArgumentError, "Total asked tricks cannot surpass number of cards in the round"
         end
-        if is_last_player?(player) and @amount_of_asked_tricks + tricks_asked_by_player == @amount_of_cards
+        if is_last_player?(player) and tricks_asked_for_until_this_player + tricks_asked_by_player == @amount_of_cards
             puts "Last player cannot ask for tricks if total sum equals amount of cards per round"
             raise ArgumentError, "Last player cannot ask for tricks if total sum equals amount of cards per round"
         end
@@ -109,11 +192,15 @@ class Round
         end
     end
 
-    def validate_tricks_made_amount!(player, tricks_made)
-        if is_last_player?(player) and tricks_made_sum + tricks_made != @amount_of_cards
-            puts "Player #{player} registered #{tricks_made} tricks, but total sum is #{tricks_made_sum + tricks_made}"
+    def validate_tricks_made_amount!(player, tricks_made, sum_of_current_tricks)
+        if tricks_made.nil?
+            return
+        end
+
+        if is_last_player?(player) and sum_of_current_tricks + tricks_made != @amount_of_cards
+            puts "Player #{player} registered #{tricks_made} tricks, but total sum is #{sum_of_current_tricks + tricks_made}"
             raise ArgumentError, "Last player must make the exact amount of tricks"
-        elsif tricks_made_sum + tricks_made > @amount_of_cards
+        elsif sum_of_current_tricks + tricks_made > @amount_of_cards
             raise ArgumentError, "Total tricks made cannot surpass number of cards in the round"
         elsif not tricks_made.between?(0, @amount_of_cards)
             raise ArgumentError, "Invalid number of tricks made"
@@ -143,6 +230,26 @@ class NullRound
     end
 
     def register_tricks(player, tricks)
+    end
+
+    def total_tricks_asked
+        0
+    end
+
+    def last_player_forbidden_value
+        "-"
+    end
+
+    def to_json
+        {
+            round_number: @round_number,
+            amount_of_cards: 0,
+            current_player: "",
+            asked_tricks: {},
+            tricks_made: {},
+            points: {},
+            starting_player: ""
+        }
     end
 
 end

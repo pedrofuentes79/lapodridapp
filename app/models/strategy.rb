@@ -2,6 +2,10 @@ class PointCalculationStrategy
 
 
   def calculate_points(asked_tricks, tricks_made)
+    if tricks_made.nil?
+      return 0
+    end
+
     if tricks_made == asked_tricks
       10 + tricks_made * 2
     else

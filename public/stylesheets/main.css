@@ -1,15 +1,30 @@
 /* General Table Styling */
-.game-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-    font-family: Arial, sans-serif;
+.tables-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.game-table th, .game-table td {
-    border: 1px solid #ccc; /* Draws the grid lines */
-    padding: 10px;
-    vertical-align: middle;
+.game-table {
+    border-collapse: collapse;
+    width: 90%;
+    margin-bottom: 2em;
+    table-layout: fixed;  /* This ensures columns have equal width */
+}
+
+.game-table, .info-table {
+    border-collapse: collapse;
+    width: 70%; /* Adjust the width as needed */
+}
+
+.info-table {
+    display: none;
+}
+
+th, td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: center;
 }
 
 .game-table th {
@@ -31,7 +46,7 @@
 }
 
 .points {
-    font-size: 20px;
+    font-size: 1.2em;
     font-weight: bold;
     color: #333;
 }
@@ -41,9 +56,14 @@
     font-size: 12px;
     color: #666;
     position: absolute;
-    top: 5px;
+    top: 5px;   
     right: 5px;
     font-style: italic;
+}
+
+.tricks {
+    font-size: 0.8em;
+    vertical-align: super;
 }
 
 /* Hover Effect */
@@ -54,10 +74,9 @@
 
 /* Highlight the starting player's cell */
 .starting-player {
-    background-color: #f0f8ff; /* Light blue background */
-    border: 2px solid #1e90ff; /* Darker blue border */
+    background-color: #f0f8ff;
     font-weight: bold;
-    color: #1e90ff; /* Optional: Text color matching the border */
+    color: #1e90ff;
 }
 
 /* Adjust padding for better visibility */
@@ -65,17 +84,63 @@
     padding: 8px;
 }
 
+
 .no-trump-round {
-    background-color: #d2ec7e; /* Light blue background */
+    background-color: #d2ec7e; /* Light green background */
     border: 2px solid #1e90ff; /* Darker blue border */
     font-weight: bold;
 }
 
+/* Leaderboard specific styles */
 #leaderboard-table {
     width: auto;
     margin-left: 0;
 }
 
 #leaderboard-table th.player-column {
-    width: 10px; /* Set a specific width for the Player column */
+    width: 150px; /* Set a specific width for the Player column */
+}
+
+.editable[data-action="registerTricks"][data-editable="false"] {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.editable[data-action="registerTricks"][data-editable="true"],
+.editable[data-action="askForTricks"] {
+    cursor: pointer;
+}
+
+.tricks-cards-ratio {
+    font-weight: bold;
+    font-size: 1.1em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.forbidden-value-cell {
+    background-color: #fff0f0;  /* Light red background */
+}
+
+.forbidden-value {
+    font-weight: bold;
+    color: #d32f2f;  /* Dark red text */
+    font-size: 1.1em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#leaderboard-table .leader {
+    background-color: #ffd700;  /* Gold background for the leader */
+    font-weight: bold;
+}
+
+#leaderboard-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+#leaderboard-table td {
+    padding: 10px;
 }

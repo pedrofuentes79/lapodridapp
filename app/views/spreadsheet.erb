@@ -1,67 +1,69 @@
 <script>
   var gameStarted = <%= @game.started ? 'true' : 'false' %>;
+  var gameState = <%= @game.to_json %>;
 </script>
 
-
-<table class="game-table">
+<div class="tables-container">
+  <table class="game-table">
     <thead>
-        <tr>
-            <th>Numero de Cartas</th>
-            <% @game.players.each do |player| %>
-                <th> <%= player %> </th>
-            <% end %>
-        </tr>
+      <tr>
+        <th>Bazas/Cartas</th>
+        <% @game.players.each do |player| %>
+          <th> <%= player %> </th>
+        <% end %>
+        <th>No puede pedir</th>
+      </tr>
     </thead>
     <tbody>
-        <% @game.rounds.each do |index, round| %>
-            <tr>
-                <%# round number %>
-                <td class="<%= round.is_trump? ? 'trump-round' : 'no-trump-round' %>">                    
-                    <%= round.amount_of_cards %>
-                </td>
+      <% @game.rounds.each do |index, round| %>
+        <tr>
+          <%# round number %>
+          <td class="<%= round.is_trump? ? 'trump-round' : 'no-trump-round' %>">
+            <div class="tricks-cards-ratio">
+              <%= round.total_tricks_asked %>/<%= round.amount_of_cards %>
+            </div>
+          </td>
 
-                <%# round cell %>
-                <% @game.players.each do |player| %>
-                    <td class="<%= 'starting-player' if round.starting_player == player %>">
-                        <div class="points-cell" game-id="<%= @game.id %>">
-                            <span class="points"><%= round.points[player] || "-" %></span>
-                            <span class="tricks-superindex">
-
-                                <%# MADE TRICKS%>
-                                <% if @game.is_current_round(round) && round.is_current_player(player) && !round.asked_tricks[player].nil? %>
-                                    <input type="number" 
-                                                id="made-tricks-input-<%= player %>" 
-                                                class="tricks-input" 
-                                                min="0" max="<%= round.amount_of_cards %>"
-                                                name='registerTricks'
-                                                game-id="<%= @game.id %>">                                <% else %>
-                                    <%= round.tricks_made[player] || "-" %>
-                                <% end %>
-                                /
-                                <%# ASKED TRICKS%>
-                                <% if @game.is_current_round(round) && round.is_current_player(player) %>
-                                    <%# if it has not asked yet%>
-                                    <% if round.asked_tricks[player].nil? %>
-                                        <input type="number" 
-                                                id="asked-tricks-input-<%= player %>" 
-                                                class="tricks-input" 
-                                                min="0" max="<%= round.amount_of_cards %>"
-                                                name='askForTricks'
-                                                game-id="<%= @game.id %>">
-                                    <% else %>
-                                        <%= round.asked_tricks[player] %>
-                                    <% end %>
-                                <% else %>
-                                    <%= round.asked_tricks[player] || "-" %>
-                                <% end %>
-                            </span>
-                        </div>
-                    </td>
-                <% end %>
-            </tr>
-        <% end %>
+          <%# round cell %>
+          <% @game.players.each do |player| %>
+            <td class="<%= 'starting-player' if round.starting_player == player %>">
+              <div class="points-cell" game-id="<%= @game.id %>">
+                <span class="points"><%= round.points[player] || "-" %></span>
+                <span class="tricks-superindex">
+                  <%# MADE TRICKS%>
+                  <span class="editable" 
+                        data-player="<%= player %>" 
+                        data-round="<%= index %>" 
+                        data-action="registerTricks" 
+                        data-gameid="<%= @game.id %>"
+                        data-editable="<%= round.asked_tricks.values.all? %>">
+                    <%= round.tricks_made[player] || "-" %>
+                  </span>
+                  /
+                  <%# ASKED TRICKS%>
+                  <span class="editable" 
+                        data-player="<%= player %>" 
+                        data-round="<%= index %>" 
+                        data-action="askForTricks" 
+                        data-gameid="<%= @game.id %>">
+                    <%= round.asked_tricks[player] || "-" %>
+                  </span>
+                </span>
+              </div>
+            </td>
+          <% end %>
+          
+          <%# forbidden value cell %>
+          <td class="forbidden-value-cell">
+            <div class="forbidden-value">
+              <%= round.last_player_forbidden_value %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
     </tbody>
-</table>
+  </table>
+</div>
 
 <!-- Leaderboard Table Placeholder -->
 <h2>Leaderboard</h2>

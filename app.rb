@@ -66,14 +66,15 @@ class MyApp < Sinatra::Base
       { error: e.message }.to_json
     end
   end
-
-  get '/api/leaderboard' do
+  
+  post '/api/update_game_state' do
     content_type :json
-    game = Game.find(params[:game_id])
-    puts "Leaderboard: #{game.leaderboard.to_json}"
-    game.leaderboard.to_json
+    game = Game.find(@request_payload['game_id'])
+    game.update_state(@request_payload['game_state'])
+    status 200
+    game.to_json
   end
-
+  
   # Start the server if this file is executed directly.
   run! if app_file == $0
 end
