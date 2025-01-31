@@ -25,7 +25,7 @@ class Round
     def ask_for_tricks(player, tricks_asked_by_player)
         validate_player_turn!(player)
         validate_asked_tricks_amount!(player, tricks_asked_by_player)
-        
+
         @asked_tricks[player] = tricks_asked_by_player
         @amount_of_asked_tricks += tricks_asked_by_player
         puts "Player #{player} asked for #{@asked_tricks[player]} tricks"
@@ -83,7 +83,7 @@ class Round
         starting_player_index = @game.players.index(@starting_player)
         last_player_index = starting_player_index - 1
         last_player = @game.players[last_player_index % @game.players.length]
-        return player == last_player
+        player == last_player
     end
 
     def validate_player_turn!(player)
@@ -130,7 +130,7 @@ class Round
 
         raise ArgumentError, "Not all players have asked for tricks" unless @asked_tricks.values.all?
     end
-    # endregion
+  # endregion
 end
 
 class NullRound
@@ -144,5 +144,4 @@ class NullRound
 
     def register_tricks(player, tricks)
     end
-
 end

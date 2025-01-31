@@ -1,11 +1,8 @@
-require_relative 'strategy'
-require_relative 'round'
-
 class Game
     attr_reader :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round, :started
 
     @@games = {}
-  
+
     def initialize(players = nil, rounds = {})
       raise ArgumentError, "No players provided" unless players
       raise ArgumentError, "Invalid players" unless players.all? { |p| p.is_a?(String) }
@@ -16,7 +13,7 @@ class Game
       @players = players
       @current_starting_player = players.first
       @max_round_number = 0
-    
+
       parse_rounds(rounds)
 
       @strategy = PointCalculationStrategy.new()
@@ -27,12 +24,12 @@ class Game
 
       # rounds dict looks like this: {"1,4"=>"trump", "2,5"=>"trump"}
       @rounds = rounds.map.with_index do |(round_str, trump), index|
-        round_numbers = round_str.split(',').map(&:to_i)
+        round_numbers = round_str.split(",").map(&:to_i)
         starting_player = @players[index % @players.length]
-        round = Round.new(self, round_numbers.first, round_numbers.last, trump == 'trump', starting_player)
+        round = Round.new(self, round_numbers.first, round_numbers.last, trump == "trump", starting_player)
         @current_round = round if index == 0 # set current round to the first round
 
-        [round_numbers.first, round]
+        [ round_numbers.first, round ]
       end.to_h
       @max_round_number = @rounds.keys.max
     end

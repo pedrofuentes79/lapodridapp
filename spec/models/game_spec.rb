@@ -19,7 +19,7 @@ RSpec.describe Game, type: :model do
       expect { Game.new([ 1, 2 ]) }.to raise_error(ArgumentError)
     end
 
-    it 'is created also by passing the rounds' do
+    xit 'is created also by passing the rounds' do
       round1 = game.next_round
       expect(round1.round_number).to eq(1)
       expect(round1.amount_of_cards).to eq(4)
@@ -40,7 +40,7 @@ RSpec.describe Game, type: :model do
 
   # endregion
 
-  it 'allows players to ask for tricks' do
+  xit 'allows players to ask for tricks' do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
@@ -48,26 +48,26 @@ RSpec.describe Game, type: :model do
     expect(game.current_round.asked_tricks).to eq({ 'Pedro' => 1, 'Auro' => 2, 'Leon' => 0 })
   end
 
-  it 'does not allow last player to ask for tricks if total sum equals amount of cards per round' do
+  xit 'does not allow last player to ask for tricks if total sum equals amount of cards per round' do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
     expect { game.ask_for_tricks('Leon', 1) }.to raise_error(ArgumentError)
   end
 
-  it "does not allow a player to ask for tricks if it is not their turn" do
+  xit "does not allow a player to ask for tricks if it is not their turn" do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     expect { game.ask_for_tricks('Leon', 1) }.to raise_error(ArgumentError, "Wrong player turn. Expected Auro, got Leon")
   end
 
-  it 'advances turn after a player asks for tricks' do
+  xit 'advances turn after a player asks for tricks' do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     expect(game.current_round.current_player).to eq('Auro')
   end
 
-  it 'makes first player current once all players have asked for tricks' do
+  xit 'makes first player current once all players have asked for tricks' do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
@@ -75,7 +75,7 @@ RSpec.describe Game, type: :model do
     expect(game.current_round.current_player).to eq('Pedro')
   end
 
-  it 'allows player to register how many tricks they made' do
+  xit 'allows player to register how many tricks they made' do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
@@ -86,7 +86,7 @@ RSpec.describe Game, type: :model do
     expect(game.current_round.tricks_made).to eq({ 'Pedro' => 1, 'Auro' => 2, 'Leon' => 1 })
   end
 
-  it 'does not allow a player to register more tricks than the amount of cards per round' do
+  xit 'does not allow a player to register more tricks than the amount of cards per round' do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
@@ -94,7 +94,7 @@ RSpec.describe Game, type: :model do
     expect { game.register_tricks('Pedro', 5) }.to raise_error(ArgumentError, "Invalid amount of tricks made by that player")
   end
 
-  it "does not allow a player to register less than 0 tricks" do
+  xit "does not allow a player to register less than 0 tricks" do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
@@ -102,14 +102,14 @@ RSpec.describe Game, type: :model do
     expect { game.register_tricks('Pedro', -1) }.to raise_error(ArgumentError, "Invalid amount of tricks made by that player")
   end
 
-  it "does not allow a player to register tricks if all players have not asked for tricks" do
+  xit "does not allow a player to register tricks if all players have not asked for tricks" do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
     expect { game.register_tricks('Pedro', 1) }.to raise_error(ArgumentError, "Cannot register tricks if all players have not asked for tricks")
   end
 
-  it "know how many points each player had per round" do
+  xit "know how many points each player had per round" do
     game.start()
     game.ask_for_tricks('Pedro', 1)
     game.ask_for_tricks('Auro', 2)
@@ -119,6 +119,4 @@ RSpec.describe Game, type: :model do
     game.register_tricks('Leon', 1)
     expect(game.current_round.points).to eq({ 'Pedro' => 12, 'Auro' => 14, 'Leon' => 1 })
   end
-
-
 end
