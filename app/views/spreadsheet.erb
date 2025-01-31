@@ -7,11 +7,11 @@
   <table class="game-table">
     <thead>
       <tr>
-        <th>Bazas/Cartas</th>
+        <th class="tricks-cards-ratio-header"> Pedidas/Totales </th>
         <% @game.players.each do |player| %>
           <th> <%= player %> </th>
         <% end %>
-        <th>No puede pedir</th>
+        <th> No puede pedir </th>
       </tr>
     </thead>
     <tbody>

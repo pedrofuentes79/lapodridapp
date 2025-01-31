@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
           input.remove();
           
           // Update game state
-          updateGameState(action, player, value, gameId);
+          updateGameState(input, action, player, value, gameId);
           fetchLeaderboard(gameId);
         };
         
@@ -80,13 +80,13 @@ function handleInputChange(event) {
     input.remove();
 
     // Update game state
-    updateGameState(action, player, value, gameId);
+    updateGameState(input, action, player, value, gameId);
     fetchLeaderboard(gameId);
 }
 
 function sendGameState(gameState, gameId) {
   console.log('Sending game id', gameId);
-  fetch('/api/update_game_state', {
+  return fetch('/api/update_game_state', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -94,16 +94,18 @@ function sendGameState(gameState, gameId) {
     body: JSON.stringify({ game_state: gameState, game_id: gameId })
   })
   .then(response => response.json())
-  .then(updatedGameState => {
-    // Update the DOM with the server-returned state
-    updateDOMGameState(updatedGameState);
-  })
-  .catch(error => console.error('Error:', error));
+  .catch(error => {
+    console.error('Error:', error);
+    throw error;
+  });
 }
 
-function updateGameState(action, player, value, gameId) {
+function updateGameState(inputElement, action, player, value, gameId) {
   const gameState = gameStateFromDOM();
-  const round = gameState.rounds[gameState.current_round_number];
+  
+  // Get the round number from the input element's data attribute
+  const roundNumber = parseInt(inputElement.dataset.round, 10);
+  const round = gameState.rounds[roundNumber];
 
   if (action === 'askForTricks') {
     round.asked_tricks[player] = parseInt(value, 10);
@@ -111,11 +113,9 @@ function updateGameState(action, player, value, gameId) {
     round.tricks_made[player] = parseInt(value, 10);
   }
 
-  // Update the tricks values immediately in the DOM
   updateTricksInDOM(gameState);
   
-  // Send to server and wait for response to update points and forbidden value
-  sendGameState(gameState, gameId);
+  return sendGameState(gameState, gameId);
 }
 
 function updateTricksInDOM(gameState) {
@@ -246,3 +246,127 @@ async function fetchLeaderboard(gameId) {
     }
   }
 }
+
+async function refreshGameData(gameId) {
+  try {
+    // Fetch the updated game HTML from the server
+    const response = await fetch(`/game/${gameId}`);
+    const html = await response.text();
+    
+    // Create a temporary container to parse the HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Update the game table
+    const newGameTable = doc.querySelector('.game-table');
+    const currentGameTable = document.querySelector('.game-table');
+    if (newGameTable && currentGameTable) {
+      currentGameTable.innerHTML = newGameTable.innerHTML;
+    }
+    
+    // Update the game state in the script tag
+    const newGameState = doc.querySelector('script');
+    if (newGameState) {
+      document.querySelector('script').innerHTML = newGameState.innerHTML;
+    }
+    
+    // Fetch and update leaderboard
+    await fetchLeaderboard(gameId);
+    
+    // Reattach event listeners to new elements
+    attachEventListeners();
+    
+  } catch (error) {
+    console.error('Failed to refresh game data:', error);
+  }
+}
+
+function attachEventListeners() {
+  const editableElements = document.querySelectorAll(".editable");
+  
+  editableElements.forEach((element) => {
+    // Remove existing listeners to prevent duplicates
+    element.replaceWith(element.cloneNode(true));
+    const newElement = document.querySelector(`[data-player="${element.dataset.player}"][data-round="${element.dataset.round}"][data-action="${element.dataset.action}"]`);
+    
+    newElement.addEventListener("dblclick", (event) => {
+      const span = event.target;
+      const player = span.dataset.player;
+      const round = span.dataset.round;
+      const action = span.dataset.action;
+      const value = span.innerText;
+      const gameId = span.dataset.gameid;
+      
+      if (action === 'registerTricks' && span.dataset.editable !== 'true') {
+        console.log('Cannot register tricks until all players have asked for tricks');
+        return;
+      }
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.value = value === "-" ? "" : value;
+      input.dataset.player = player;
+      input.dataset.round = round;
+      input.dataset.action = action;
+      input.dataset.gameid = gameId;
+      
+      let isHandled = false;
+      
+      const handleChange = async (event) => {
+        if (isHandled) return;
+        isHandled = true;
+        
+        const value = input.value;
+        span.innerText = value === "" ? "-" : value;
+        span.style.display = "inline";
+        
+        input.removeEventListener("blur", handleChange);
+        input.removeEventListener("keypress", handleKeyPress);
+        input.remove();
+        
+        // Update game state and refresh all data
+        await updateGameState(input, action, player, value, gameId);
+        await refreshGameData(gameId);
+      };
+      
+      const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          handleChange(event);
+        }
+      };
+
+      input.addEventListener("blur", handleChange);
+      input.addEventListener("keypress", handleKeyPress);
+
+      span.style.display = "none";
+      span.parentNode.insertBefore(input, span);
+      input.focus();
+    });
+  });
+}
+
+async function handleInputChange(event) {
+    const input = event.target;
+    const player = input.dataset.player;
+    const gameId = input.dataset.gameid;
+    const action = input.dataset.action;
+    const value = input.value;
+    const span = input.nextSibling;
+
+    span.innerText = value === "" ? "-" : value;
+    span.style.display = "inline";
+    input.remove();
+
+    await updateGameState(input, action, player, value, gameId);
+    await refreshGameData(gameId);
+}
+
+// Add initial event listener attachment when the page loads
+document.addEventListener("DOMContentLoaded", () => {
+    attachEventListeners();
+    
+    // Initial leaderboard load
+    const gameId = document.querySelector('.points-cell').getAttribute('game-id');
+    fetchLeaderboard(gameId);
+});

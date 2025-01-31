@@ -36,36 +36,6 @@ class MyApp < Sinatra::Base
     @game = Game.find(params[:id])
     erb :spreadsheet
   end
-
-  post '/api/ask_for_tricks' do
-    content_type :json
-    player = @request_payload['player']
-    tricks = @request_payload['tricks'].to_i
-    game = Game.find(@request_payload['game_id'])
-
-    begin
-      game.ask_for_tricks(player, tricks)
-      status 200
-    rescue => e
-      status 400
-      { error: e.message }.to_json
-    end
-  end
-
-  post '/api/register_tricks' do
-    content_type :json
-    player = @request_payload['player']
-    tricks = @request_payload['tricks'].to_i
-    game = Game.find(@request_payload['game_id'])
-
-    begin
-      game.register_tricks(player, tricks)
-      status 200
-    rescue => e
-      status 400
-      { error: e.message }.to_json
-    end
-  end
   
   post '/api/update_game_state' do
     content_type :json
@@ -73,6 +43,13 @@ class MyApp < Sinatra::Base
     game.update_state(@request_payload['game_state'])
     status 200
     game.to_json
+  end
+
+  get '/api/leaderboard' do
+    content_type :json
+    game_id = params[:game_id]
+    game = Game.find(game_id)
+    game.leaderboard.to_json
   end
   
   # Start the server if this file is executed directly.

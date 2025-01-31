@@ -159,6 +159,10 @@ class Round
 
     # region VALIDATIONS
     def is_last_player?(player)
+        puts "Starting player: #{@starting_player}"
+        puts "Players: #{@game.players.inspect}"
+        puts "Player: #{player}"
+        puts "Last player: #{last_player}"
         starting_player_index = @game.players.index(@starting_player)
         last_player_index = starting_player_index - 1
         last_player = @game.players[last_player_index % @game.players.length]

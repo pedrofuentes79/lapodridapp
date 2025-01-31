@@ -9,7 +9,6 @@
     border-collapse: collapse;
     width: 90%;
     margin-bottom: 2em;
-    table-layout: fixed;  /* This ensures columns have equal width */
 }
 
 .game-table, .info-table {
@@ -87,7 +86,7 @@ th, td {
 
 .no-trump-round {
     background-color: #d2ec7e; /* Light green background */
-    border: 2px solid #1e90ff; /* Darker blue border */
+    /* border: 2px solid #1e90ff;  */
     font-weight: bold;
 }
 
@@ -143,4 +142,11 @@ th, td {
 
 #leaderboard-table td {
     padding: 10px;
+}
+
+.tricks-cards-ratio-header {
+    background-color: #f8f8f8;
+    font-weight: bold;
+    font-size: 1.1em;
+    width: auto;
 }
