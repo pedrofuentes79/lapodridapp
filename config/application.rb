@@ -6,7 +6,7 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-require_relative '../app.rb'
+require_relative "../app.rb"
 
 module RbLapodridapp
   class Application < Rails::Application

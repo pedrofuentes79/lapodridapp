@@ -38,7 +38,7 @@ class MyApp < Sinatra::Base
     @game = Game.find(params[:id])
     erb :spreadsheet
   end
-  
+
   post '/api/update_game_state' do
     content_type :json
     game = Game.find(@request_payload['game_id'])
@@ -53,7 +53,7 @@ class MyApp < Sinatra::Base
     game = Game.find(game_id)
     game.leaderboard.to_json
   end
-  
+
   # Start the server if this file is executed directly.
   run! if app_file == $0
 end
