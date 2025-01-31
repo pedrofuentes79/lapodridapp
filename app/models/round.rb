@@ -1,7 +1,9 @@
 class Round
-    attr_reader :round_number, :amount_of_cards, :amount_of_asked_tricks,
-                :asked_tricks, :current_player, :tricks_made, :points, :starting_player
+    attr_reader :round_number, :amount_of_cards, :asked_tricks, :is_trump,
+                :current_player, :tricks_made, :points, :starting_player
 
+    alias :is_trump? :is_trump
+    
     def initialize(game, round_number, amount_of_cards, is_trump, starting_player)
         @game = game
         @round_number = round_number
@@ -9,14 +11,9 @@ class Round
         @is_trump = is_trump
         @starting_player = starting_player
         @current_player = starting_player
-
-        @amount_of_asked_tricks = 0
         initialize_tricks_dicts
     end
 
-    def is_trump?
-        @is_trump
-    end
 
     def total_tricks_asked
         if asked_tricks.values.any?
@@ -27,25 +24,8 @@ class Round
     end
 
     def last_player_forbidden_value
-        return "-" unless all_players_asked_except_one?
-        return "-" unless last_player == remaining_player_to_ask_for_tricks
+        return "-" unless all_players_asked_except_one? && last_player == remaining_player_to_ask_for_tricks
         @amount_of_cards - total_tricks_asked
-    end
-
-    def last_player
-        @game.next_player_to(@current_player, -1)
-    end
-
-    def remaining_player_to_ask_for_tricks
-        @game.players.find { |player| @asked_tricks[player].nil? }
-    end
-
-    def all_players_asked_except_one?
-        @asked_tricks.values.compact.length == @game.players.length - 1
-    end
-
-    def is_current_player(player)
-        @current_player == player
     end
 
     def ask_for_tricks(player, tricks_asked_by_player)
@@ -53,25 +33,27 @@ class Round
         validate_asked_tricks_amount!(player, tricks_asked_by_player)
         
         @asked_tricks[player] = tricks_asked_by_player
-        @amount_of_asked_tricks += tricks_asked_by_player
-        puts "Player #{player} asked for #{@asked_tricks[player]} tricks"
         advance_turn
     end
 
     def register_tricks(player, tricks_made_by_player)
-        validate_all_players_have_asked_for_tricks!()
+        validate_all_players_have_asked_for_tricks!
         validate_tricks_made_amount!(player, tricks_made_by_player)
 
         @tricks_made[player] = tricks_made_by_player
-        puts "Player #{player} registered #{@tricks_made[player]} tricks"
 
         if all_players_registered_tricks?
-          puts "All players have registered their tricks"
           calculate_points
           @game.next_round
         else
           advance_turn
         end
+    end
+
+    def update_state(state)
+        validate_state!(state)
+        apply_state(state)
+        calculate_points if state['tricks_made'].values.all?
     end
 
     def to_json
@@ -86,65 +68,7 @@ class Round
         }
     end
 
-
-    def update_state(state)
-        validate_state!(state)
-        apply_state(state)
-        if state['tricks_made'].values.all?
-            calculate_points
-        end
-    end
-
-    def apply_state(state)
-        @asked_tricks = state['asked_tricks']
-        @tricks_made = state['tricks_made']
-    end
-
-    def validate_state!(state)
-        @game.players.each do |player|
-            validate_asked_tricks_amount!(player, state['asked_tricks'][player], sum_until_player(state, player, 'asked_tricks'))
-            validate_tricks_made_amount!(player, state['tricks_made'][player], sum_until_player(state, player, 'tricks_made')) 
-        end
-    end
-
-    def sum_until_player(state, player, key)
-        # TODO: make this faster
-        starting_index = @game.players.index(@starting_player)
-        # player_index = @game.players.index(player)
-
-        players_until_current = []
-        current_index = @game.players.index(player)
-        
-        i = starting_index
-        while i != current_index
-            players_until_current << @game.players[i]
-            i = (i + 1) % @game.players.length
-        end
-        
-        players_until_current
-            .map { |aPlayer| state[key][aPlayer] }
-            .compact
-            .sum(0)
-    end
-
     private
-
-    def calculate_points
-      for player in @game.players
-        @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
-      end
-    end
-
-    def advance_turn
-        current_index = @game.players.index(@current_player)
-        next_index = (current_index + 1) % @game.players.length
-        @current_player = @game.players[next_index]
-        puts "Current player is now #{@current_player}"
-    end
-
-    def all_players_registered_tricks?
-        @tricks_made.keys.length == @game.players.length and @tricks_made.values.all?
-    end
 
     def initialize_tricks_dicts
         @points = {}
@@ -157,33 +81,57 @@ class Round
         end
     end
 
-    # region VALIDATIONS
-    def is_last_player?(player)
-        puts "Starting player: #{@starting_player}"
-        puts "Players: #{@game.players.inspect}"
-        puts "Player: #{player}"
-        puts "Last player: #{last_player}"
-        starting_player_index = @game.players.index(@starting_player)
-        last_player_index = starting_player_index - 1
-        last_player = @game.players[last_player_index % @game.players.length]
-        return player == last_player
+    def calculate_points
+        @game.players.each do |player|
+            @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
+        end
     end
 
+    def advance_turn
+        current_index = @game.players.index(@current_player)
+        @current_player = @game.players[(current_index + 1) % @game.players.length]
+    end
+
+    def all_players_registered_tricks?
+        @tricks_made.values.all?
+    end
+
+    def last_player
+        @game.next_player_to(@current_player, -1)
+    end
+
+    def remaining_player_to_ask_for_tricks
+        @game.players.find { |player| @asked_tricks[player].nil? }
+    end
+
+    def all_players_asked_except_one?
+        @asked_tricks.values.compact.length == @game.players.length - 1
+    end
+
+    def is_last_player?(player)
+        starting_player_index = @game.players.index(@starting_player)
+        last_player_index = (starting_player_index - 1) % @game.players.length
+        player == @game.players[last_player_index]
+    end
+
+    # Validations
     def validate_player_turn!(player)
         raise ArgumentError, "Wrong player turn. Expected #{@current_player}, got #{player}" unless player == @current_player
     end
 
-    def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player)
-        if tricks_asked_by_player.nil?
-            return
+    # is this allowed in ruby?
+    def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player = nil)
+        if tricks_asked_for_until_this_player.nil?
+            tricks_asked_for_until_this_player = sum_until_player({"asked_tricks" => @asked_tricks}, player, "asked_tricks")
         end
 
+        return if tricks_asked_by_player.nil?
+
         if tricks_asked_by_player > @amount_of_cards
-            puts "Total asked tricks cannot surpass number of cards in the round"
             raise ArgumentError, "Total asked tricks cannot surpass number of cards in the round"
         end
-        if is_last_player?(player) and tricks_asked_for_until_this_player + tricks_asked_by_player == @amount_of_cards
-            puts "Last player cannot ask for tricks if total sum equals amount of cards per round"
+        
+        if is_last_player?(player) && tricks_asked_for_until_this_player + tricks_asked_by_player == @amount_of_cards
             raise ArgumentError, "Last player cannot ask for tricks if total sum equals amount of cards per round"
         end
     end
@@ -212,16 +160,37 @@ class Round
     end
 
     def validate_all_players_have_asked_for_tricks!
-        # debug print statement
-        if not @asked_tricks.values.all?
-            puts "Not all players have asked for tricks"
-            puts @asked_tricks.inspect
-        end
-
-
         raise ArgumentError, "Not all players have asked for tricks" unless @asked_tricks.values.all?
     end
-    # endregion
+
+    def validate_state!(state)
+        @game.players.each do |player|
+            validate_asked_tricks_amount!(player, state['asked_tricks'][player], sum_until_player(state, player, 'asked_tricks'))
+            validate_tricks_made_amount!(player, state['tricks_made'][player], sum_until_player(state, player, 'tricks_made')) 
+        end
+    end
+
+    def apply_state(state)
+        @asked_tricks = state['asked_tricks']
+        @tricks_made = state['tricks_made']
+    end
+
+    def sum_until_player(state, player, key)
+        starting_index = @game.players.index(@starting_player)
+        current_index = @game.players.index(player)
+        
+        players_until_current = []
+        i = starting_index
+        while i != current_index
+            players_until_current << @game.players[i]
+            i = (i + 1) % @game.players.length
+        end
+        
+        players_until_current
+            .map { |aPlayer| state[key][aPlayer] }
+            .compact
+            .sum(0)
+    end
 end
 
 class NullRound
