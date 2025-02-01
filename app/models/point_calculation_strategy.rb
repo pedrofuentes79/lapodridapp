@@ -1,6 +1,4 @@
 class PointCalculationStrategy
-
-
   def calculate_points(asked_tricks, tricks_made)
     if tricks_made.nil?
       return 0

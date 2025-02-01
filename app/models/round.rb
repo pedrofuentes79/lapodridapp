@@ -3,7 +3,7 @@ class Round
                 :current_player, :tricks_made, :points, :starting_player
 
     alias :is_trump? :is_trump
-    
+
     def initialize(game, round_number, amount_of_cards, is_trump, starting_player)
         @game = game
         @round_number = round_number
@@ -31,7 +31,7 @@ class Round
     def ask_for_tricks(player, tricks_asked_by_player)
         validate_player_turn!(player)
         validate_asked_tricks_amount!(player, tricks_asked_by_player)
-        
+
         @asked_tricks[player] = tricks_asked_by_player
         advance_turn
     end
@@ -53,7 +53,7 @@ class Round
     def update_state(state)
         validate_state!(state)
         apply_state(state)
-        calculate_points if state['tricks_made'].values.all?
+        calculate_points if state["tricks_made"].values.all?
     end
 
     def to_json
@@ -122,7 +122,7 @@ class Round
     # is this allowed in ruby?
     def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player = nil)
         if tricks_asked_for_until_this_player.nil?
-            tricks_asked_for_until_this_player = sum_until_player({"asked_tricks" => @asked_tricks}, player, "asked_tricks")
+            tricks_asked_for_until_this_player = sum_until_player({ "asked_tricks" => @asked_tricks }, player, "asked_tricks")
         end
 
         return if tricks_asked_by_player.nil?
@@ -130,7 +130,7 @@ class Round
         if tricks_asked_by_player > @amount_of_cards
             raise ArgumentError, "Total asked tricks cannot surpass number of cards in the round"
         end
-        
+
         if is_last_player?(player) && tricks_asked_for_until_this_player + tricks_asked_by_player == @amount_of_cards
             raise ArgumentError, "Last player cannot ask for tricks if total sum equals amount of cards per round"
         end
@@ -165,27 +165,27 @@ class Round
 
     def validate_state!(state)
         @game.players.each do |player|
-            validate_asked_tricks_amount!(player, state['asked_tricks'][player], sum_until_player(state, player, 'asked_tricks'))
-            validate_tricks_made_amount!(player, state['tricks_made'][player], sum_until_player(state, player, 'tricks_made')) 
+            validate_asked_tricks_amount!(player, state["asked_tricks"][player], sum_until_player(state, player, "asked_tricks"))
+            validate_tricks_made_amount!(player, state["tricks_made"][player], sum_until_player(state, player, "tricks_made"))
         end
     end
 
     def apply_state(state)
-        @asked_tricks = state['asked_tricks']
-        @tricks_made = state['tricks_made']
+        @asked_tricks = state["asked_tricks"]
+        @tricks_made = state["tricks_made"]
     end
 
     def sum_until_player(state, player, key)
         starting_index = @game.players.index(@starting_player)
         current_index = @game.players.index(player)
-        
+
         players_until_current = []
         i = starting_index
         while i != current_index
             players_until_current << @game.players[i]
             i = (i + 1) % @game.players.length
         end
-        
+
         players_until_current
             .map { |aPlayer| state[key][aPlayer] }
             .compact
@@ -224,5 +224,4 @@ class NullRound
             starting_player: ""
         }
     end
-
 end
