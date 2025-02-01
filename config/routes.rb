@@ -14,12 +14,28 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
-  mount MyApp => "/"
+  # Legacy Sinatra routes (mounted at root)
+  mount MyApp => "/legacy"
 
+  # New Rails routes
   resources :games do
-    resource :leaderboard
-    resources :winners
+    member do
+      post 'start'
+      post 'ask_tricks'
+      post 'register_tricks'
+      get 'leaderboard'
+    end
   end
 
-  root "welcome#index"
+  # API routes
+  namespace :api do
+    resources :games, only: [:create, :show, :update] do
+      member do
+        get 'leaderboard'
+      end
+    end
+  end
+
+  # Set the root to the games index
+  root "games#index"
 end
