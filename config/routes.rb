@@ -1,3 +1,5 @@
+require_relative "../app.rb"
+
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
@@ -11,6 +13,13 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  mount MyApp => "/"
+
+  resources :games do
+    resource :leaderboard
+    resources :winners
+  end
 
   root "welcome#index"
 end
