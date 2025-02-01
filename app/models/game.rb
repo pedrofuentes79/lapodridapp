@@ -1,11 +1,8 @@
-require_relative 'strategy'
-require_relative 'round'
-
 class Game
     attr_reader :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round, :started
 
     @@games = {}
-  
+
     def initialize(players = nil, rounds = {})
       raise ArgumentError, "No players provided" unless players
       raise ArgumentError, "Invalid players" unless players.all? { |p| p.is_a?(String) }
@@ -16,7 +13,7 @@ class Game
       @players = players
       @current_starting_player = players.first
       @max_round_number = 0
-    
+
       parse_rounds(rounds)
 
       @strategy = PointCalculationStrategy.new()
@@ -31,12 +28,12 @@ class Game
 
       # rounds dict looks like this: {"1,4"=>"trump", "2,5"=>"trump"}
       @rounds = rounds.map.with_index do |(round_str, trump), index|
-        round_numbers = round_str.split(',').map(&:to_i)
+        round_numbers = round_str.split(",").map(&:to_i)
         starting_player = @players[index % @players.length]
-        round = Round.new(self, round_numbers.first, round_numbers.last, trump == 'trump', starting_player)
+        round = Round.new(self, round_numbers.first, round_numbers.last, trump == "trump", starting_player)
         @current_round = round if index == 0 # set current round to the first round
 
-        [round_numbers.first, round]
+        [ round_numbers.first, round ]
       end.to_h
       @max_round_number = @rounds.keys.max
     end
@@ -99,20 +96,18 @@ class Game
             id: @id,
             players: @players,
             current_starting_player: @current_starting_player,
-            rounds: @rounds.map { |round_number, round| [round_number, round.to_json] }.to_h,
+            rounds: @rounds.map { |round_number, round| [ round_number, round.to_json ] }.to_h,
             current_round_number: @current_round.round_number,
             started: @started
         }.to_json
     end
 
     def update_state(state)
-        @current_starting_player = state['current_starting_player']
-        @current_round = @rounds[state['current_round_number']]
-        @started = state['started']
+        @current_starting_player = state["current_starting_player"]
+        @current_round = @rounds[state["current_round_number"]]
+        @started = state["started"]
         @rounds.each do |round_number, round|
-            round.update_state(state['rounds'][round_number.to_s])
+            round.update_state(state["rounds"][round_number.to_s])
         end
-
-
     end
 end
