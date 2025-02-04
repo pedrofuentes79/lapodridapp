@@ -9,8 +9,10 @@ RSpec.describe "Games", type: :request do
   end
 
   describe "GET /games/:id" do
+    let!(:game) { Game.new([ "Pedro", "Auro", "Leon" ], { "1, 4" => "trump" }) }
+
     it "returns http success" do
-      get "/games/123"
+      get "/games/#{game.id}"
       expect(response).to have_http_status(:success)
     end
   end
