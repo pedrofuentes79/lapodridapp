@@ -2,14 +2,18 @@ require 'sinatra/base'
 require 'json'
 require 'securerandom'
 
-require_relative 'app/models/point_calculation_strategy'
-require_relative 'app/models/round'
-require_relative 'app/models/game'
+# require_relative 'app/models/point_calculation_strategy'
+# require_relative 'app/models/round'
+# require_relative 'app/models/game'
+require_relative 'app/controllers/games_controller'
 
 class MyApp < Sinatra::Base
   set :public_folder, 'public'
   set :views, File.join(File.dirname(__FILE__), 'app/views')
   set :erb, layout: :'layouts/application.html'
+
+  # Mount the GamesController to handle game-related routes
+  use GamesController
 
   # Enable JSON body parsing
   before do
