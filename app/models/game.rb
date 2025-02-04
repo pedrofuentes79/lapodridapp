@@ -24,7 +24,7 @@ class Game
       @players = players
       @current_starting_player = players&.first
       @max_round_number = 0
-      
+
       if valid?
         @@games[@id] = self
         parse_rounds(rounds)
@@ -67,6 +67,7 @@ class Game
         total_points.sort_by { |player, points| -points }.to_h
     end
 
+    # TODO: check if this is generating valid json?? the frontend is not receiving it right...
     def to_json
         {
             id: @id,
@@ -103,7 +104,7 @@ class Game
 
     def validate_players_format
       return if players.nil?
-      
+
       unless players.all? { |p| p.is_a?(String) }
         errors.add(:players, "must all be strings")
       end
@@ -122,5 +123,4 @@ class Game
       end.to_h
       @max_round_number = @rounds.keys.max
     end
-
 end

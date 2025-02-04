@@ -1,2 +1,107 @@
-<h1>Games#index</h1>
-<p>Find me in app/views/games/index.html.erb</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LaPodridApp</title>
+    <style>
+        .round-input {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>LaPodridApp</h1>
+
+    <div>
+        <h2>Nueva partida</h2>
+        <div>
+            <h3>Jugadores</h3>
+            <div id="players-container"></div>
+            <button onclick="addPlayer()">Agregar jugador</button>
+        </div>
+
+        <div>
+            <h3>Rondas</h3>
+            <div id="rounds-container"></div>
+            <button onclick="addRound()">Agregar ronda</button>
+        </div>
+
+        <button onclick="startGame()">Empezar juego</button>
+    </div>
+
+    <div id="gameState"></div>
+
+    <script>
+        function addPlayer() {
+            const container = document.getElementById('players-container');
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'player-input';
+            playerDiv.innerHTML = `
+                <input type="text" placeholder="Jugador ${container.children.length + 1}" class="player-name">
+            `;
+            container.appendChild(playerDiv);
+        }
+        function addRound() {
+            const container = document.getElementById('rounds-container');
+            const roundDiv = document.createElement('div');
+            roundDiv.className = 'round-input';
+            roundDiv.innerHTML = `
+                <label>
+                    Round ${container.children.length + 1}:
+                    <input type="number" min="1" placeholder="#Cartas" class="cards-amount">
+                </label>
+                <label>
+                    <input type="checkbox" class="no-trump"> Sin triunfo
+                </label>
+            `;
+            container.appendChild(roundDiv);
+        }
+
+        async function startGame() {
+            console.log('starting game...')
+            // get all players
+            const players = [];
+            document.querySelectorAll('.player-name').forEach(playerInput => {
+                const name = playerInput.value;
+                if (name) {
+                    players.push(name);
+                }
+            });
+
+            const roundsData = {};
+            document.querySelectorAll('.round-input').forEach((roundDiv, index) => {
+                const cards = roundDiv.querySelector('.cards-amount').value;
+                const noTrump = roundDiv.querySelector('.no-trump').checked;
+                if (cards) {
+                    roundsData[[index + 1, parseInt(cards)]] = noTrump ? 'noTrump' : 'trump';
+                }
+            });
+
+            const response = await fetch('/games', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                },
+                body: JSON.stringify({
+                    game: {
+                        players: players,
+                        rounds: roundsData
+                    }
+                })
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url; // Perform a manual redirect
+            } else {
+                console.log('Something went wrong:', response.status);
+            }
+        }
+
+        // Add defaults
+        addPlayer();
+        addPlayer();
+        addRound();
+    </script>
+    <script src="/js/game.js"></script>
+</body>
+</html>

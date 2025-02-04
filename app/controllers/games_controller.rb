@@ -1,58 +1,73 @@
 class GamesController < ApplicationController
-  def index
-    # List all games (we might want to add some filtering later)
-    # @games = Game.all
-  end
+  protect_from_forgery with: :null_session
 
-  def show
-    @game = Game.find(params[:id])
-    render :show
+  def index
+    render :index
   end
 
   def new
-    # creates an empty game, so that we can add players and rounds to it later?
-    # this will generate errors though...
     @game = Game.new
   end
 
   def create
-    @game = Game.new(game_params)
-    
+    players = game_params[:players]
+    rounds = game_params[:rounds]
+
+    rounds = rounds.to_h if rounds.is_a?(ActionController::Parameters)
+    players = players.to_a if players.is_a?(ActionController::Parameters)
+
+    @game = Game.new(players, rounds)
+
     if @game.valid?
-      redirect_to game_path(@game)
+      @game.start
+      respond_to do |format|
+        format.html { redirect_to game_path(@game.id) }
+        format.json { render json: @game, status: :created }
+      end
     else
-      render :new
+      respond_to do |format|
+        format.html { render :new }
+        format.json { render json: @game.errors, status: :unprocessable_entity }
+      end
     end
   end
 
-  def start
+  def game_params
+    params.require(:game).permit(players: [], rounds: {})
+  end
+  def show
     @game = Game.find(params[:id])
-    @game.start
-    redirect_to game_path(@game)
+    respond_to do |format|
+      format.html { render :spreadsheet }
+      format.json { render json: @game }
+    end
   end
 
-  # def ask_tricks
-  #   @game = Game.find(params[:id])
-  #   @game.ask_for_tricks(params[:player], params[:tricks].to_i)
-  #   redirect_to game_path(@game)
-  # rescue ArgumentError => e
-  #   flash[:error] = e.message
-  #   redirect_to game_path(@game)
-  # end
-
-  # def register_tricks
-  #   @game = Game.find(params[:id])
-  #   @game.register_tricks(params[:player], params[:tricks].to_i)
-  #   redirect_to game_path(@game)
-  # rescue ArgumentError => e
-  #   flash[:error] = e.message
-  #   redirect_to game_path(@game)
-  # end
+  def update_state
+    @game = Game.find(params[:game_id])
+    if @game.update_state(params[:game_state])
+      render json: @game, status: :ok
+    else
+      render json: @game.errors, status: :unprocessable_entity
+    end
+  end
 
   def leaderboard
+    @game = Game.find(params[:game_id] || params[:id])
+    if @game
+      render json: @game.leaderboard
+    else
+      render json: { error: "Game not found" }, status: :not_found
+    end
+  end
+
+  def winners
     @game = Game.find(params[:id])
-    @leaderboard = @game.leaderboard
-    render :leaderboard
+    if @game
+      render json: @game.leaderboard
+    else
+      render json: { error: "Game not found" }, status: :not_found
+    end
   end
 
   private

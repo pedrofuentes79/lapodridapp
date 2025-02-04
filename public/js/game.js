@@ -183,7 +183,15 @@ function allPlayersAsked(round) {
 }
 
 function gameStateFromDOM() {
-  return JSON.parse(document.querySelector('script').innerText.match(/var gameState = (.*);/)[1]);
+  const scriptContent = document.querySelector('script').innerText;
+  console.log('Script content:', scriptContent);
+
+  const match = scriptContent.match(/var gameState = (.*);/);
+  if (!match || match.length < 2) {
+    throw new Error('Game state not found in script tag');
+  }
+
+  return JSON.parse(match[1]);
 }
 
 async function fetchLeaderboard(gameId) {

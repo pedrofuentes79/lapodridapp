@@ -23,7 +23,9 @@ Rails.application.routes.draw do
       post 'start'
       post 'ask_tricks'
       post 'register_tricks'
+      get 'show'
       get 'leaderboard'
+      get 'winners'
     end
   end
 
