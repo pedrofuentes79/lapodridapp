@@ -1,6 +1,6 @@
 <script>
   var gameStarted = <%= @game.started ? 'true' : 'false' %>;
-  var gameState = <%= @game.to_json %>;
+  var gameState = <%= raw @game.to_json %>;
 </script>
 
 <div class="tables-container">
