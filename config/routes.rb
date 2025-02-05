@@ -34,6 +34,7 @@ Rails.application.routes.draw do
     resources :games, only: [:create, :show, :update] do
       member do
         get 'leaderboard'
+        post 'update_game_state', to: 'games#update_state'
       end
     end
   end

@@ -42,25 +42,8 @@ class GamesController < ApplicationController
       format.json { render json: @game }
     end
   end
-
-  def update_state
-    @game = Game.find(params[:game_id])
-    if @game.update_state(params[:game_state])
-      render json: @game, status: :ok
-    else
-      render json: @game.errors, status: :unprocessable_entity
-    end
-  end
-
-  def leaderboard
-    @game = Game.find(params[:game_id] || params[:id])
-    if @game
-      render json: @game.leaderboard
-    else
-      render json: { error: "Game not found" }, status: :not_found
-    end
-  end
-
+  # TODO:
+  # this one should actually display a winners page, with only the leaderboard and some other stats...
   def winners
     @game = Game.find(params[:id])
     if @game

@@ -67,8 +67,7 @@ class Game
         total_points.sort_by { |player, points| -points }.to_h
     end
 
-    # TODO: check if this is generating valid json?? the frontend is not receiving it right...
-    def to_json
+    def to_json(options = {})
         {
             id: @id,
             players: @players,
@@ -76,7 +75,7 @@ class Game
             rounds: @rounds.map { |round_number, round| [ round_number, round.to_json ] }.to_h,
             current_round_number: @current_round.round_number,
             started: @started
-        }.to_json
+        }.to_json(options)
     end
 
     def update_state(state)

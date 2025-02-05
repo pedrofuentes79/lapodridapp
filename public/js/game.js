@@ -86,12 +86,12 @@ function handleInputChange(event) {
 
 function sendGameState(gameState, gameId) {
   console.log('Sending game id', gameId);
-  return fetch('/api/update_game_state', {
+  return fetch(`/api/games/${gameId}/update_game_state`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ game_state: gameState, game_id: gameId })
+    body: JSON.stringify({ game_state: gameState, id: gameId })
   })
   .then(response => response.json())
   .catch(error => {
@@ -184,20 +184,28 @@ function allPlayersAsked(round) {
 
 function gameStateFromDOM() {
   const scriptContent = document.querySelector('script').innerText;
-  console.log('Script content:', scriptContent);
 
   const match = scriptContent.match(/var gameState = (.*);/);
   if (!match || match.length < 2) {
     throw new Error('Game state not found in script tag');
   }
 
-  return JSON.parse(match[1]);
+  // Decode HTML entities
+  const decodedGameState = match[1]
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&apos;/g, "'");
+
+  console.log('Game state:', decodedGameState);
+  return JSON.parse(decodedGameState);
 }
 
 async function fetchLeaderboard(gameId) {
   try {
     console.log('Fetching leaderboard for game:', gameId);
-    const response = await fetch(`/api/leaderboard?game_id=${gameId}`);
+    const response = await fetch(`/api/games/${gameId}/leaderboard`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
