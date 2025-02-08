@@ -69,7 +69,7 @@ class Game
             end
         end
         @leaderboard = total_points.sort_by { |player, points| -points }.to_h
-        
+
         # I dislike this, but let's give it a shot
         # TODO: enclose this somewhere else... (observer pattern?)
         Turbo::StreamsChannel.broadcast_replace_to(
@@ -100,7 +100,7 @@ class Game
             round.update_state(state["rounds"][round_number.to_s])
         end
         update_leaderboard
-        return true
+        true
     end
 
     def is_current_round(round)
