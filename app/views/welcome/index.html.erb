@@ -76,7 +76,7 @@
                 }
             });
 
-            const response = await fetch('/api/game', {
+            const response = await fetch('/api/games', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,6 +99,6 @@
         addPlayer();
         addRound();
     </script>
-    <script src="/js/game.js"></script>
+    <script type="module" src="/js/game.js"></script>
 </body>
 </html>
