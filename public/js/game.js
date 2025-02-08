@@ -1,3 +1,6 @@
+const GAME_STATE_SELECTOR = '#game-state';
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const editableElements = document.querySelectorAll(".editable"); 
 
@@ -89,8 +92,9 @@ function sendGameState(gameState, gameId) {
 
 function updateGameState(inputElement, action, player, value, gameId) {
   const gameState = gameStateFromDOM();
+  console.log('Game state:', gameState);
   
-  // Get the round number from the input element's data attribute
+  // EDITS GAME STATE WITH VALUES FROM DOM
   const roundNumber = parseInt(inputElement.dataset.round, 10);
   const round = gameState.rounds[roundNumber];
 
@@ -102,7 +106,15 @@ function updateGameState(inputElement, action, player, value, gameId) {
 
   updateTricksInDOM(gameState);
   
-  return sendGameState(gameState, gameId);
+  return sendGameState(gameState, gameId)
+    .then(response => {
+      console.log('Game state updated successfully');
+      return response;
+    })
+    .catch(error => {
+      console.error('Error updating game state:', error);
+      throw error;
+    });
 }
 
 function updateTricksInDOM(gameState) {
@@ -110,7 +122,7 @@ function updateTricksInDOM(gameState) {
   const round = gameState.rounds[roundNumber];
   
   // Update the gameState in the script tag
-  document.querySelector('script').innerText = `var gameState = ${JSON.stringify(gameState)};`;
+  document.querySelector(GAME_STATE_SELECTOR).innerText = `var gameState = ${JSON.stringify(gameState)};`;
 
   // Update data-editable attributes for all rounds
   Object.entries(gameState.rounds).forEach(([index, roundData]) => {
@@ -170,7 +182,7 @@ function allPlayersAsked(round) {
 }
 
 function gameStateFromDOM() {
-  const scriptContent = document.querySelector('script').innerText;
+  const scriptContent = document.querySelector(GAME_STATE_SELECTOR).innerText;
 
   const match = scriptContent.match(/var gameState = (.*);/);
   if (!match || match.length < 2) {
@@ -190,10 +202,11 @@ function gameStateFromDOM() {
 }
 
 async function fetchLeaderboard(gameId) {
+  return;
   try {
     console.log('Fetching leaderboard for game:', gameId);
     const response = await fetch(`/api/games/${gameId}/leaderboard`);
-    
+    console.log('Response:', response);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -250,39 +263,6 @@ async function fetchLeaderboard(gameId) {
   }
 }
 
-async function refreshGameData(gameId) {
-  try {
-    // Fetch the updated game HTML from the server
-    const response = await fetch(`/games/${gameId}`);
-    const html = await response.text();
-    
-    // Create a temporary container to parse the HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Update the game table
-    const newGameTable = doc.querySelector('.game-table');
-    const currentGameTable = document.querySelector('.game-table');
-    if (newGameTable && currentGameTable) {
-      currentGameTable.innerHTML = newGameTable.innerHTML;
-    }
-    
-    // Update the game state in the script tag
-    const newGameState = doc.querySelector('script');
-    if (newGameState) {
-      document.querySelector('script').innerHTML = newGameState.innerHTML;
-    }
-    
-    // Fetch and update leaderboard
-    await fetchLeaderboard(gameId);
-
-    // Reattach event listeners to new elements
-    attachEventListeners();
-    
-  } catch (error) {
-    console.error('Failed to refresh game data:', error);
-  }
-}
 
 function attachEventListeners() {
   const editableElements = document.querySelectorAll(".editable");

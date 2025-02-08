@@ -2,7 +2,7 @@ class Game
     include ActiveModel::Model
     include ActiveModel::Validations
 
-    attr_accessor :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round, :started
+    attr_accessor :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round, :started, :leaderboard
 
     validates :players, presence: true
     validate :validate_players_format
@@ -24,11 +24,15 @@ class Game
       @players = players
       @current_starting_player = players&.first
       @max_round_number = 0
+      @leaderboard = {}
 
       if valid?
         @@games[@id] = self
         parse_rounds(rounds)
         @strategy = PointCalculationStrategy.new()
+      else
+        puts "Game is not valid"
+        puts errors.full_messages
       end
     end
 
@@ -57,14 +61,23 @@ class Game
         @players[(current_index + offset) % @players.length]
     end
 
-    def leaderboard
+    def update_leaderboard
         total_points = Hash.new(0)
         @rounds.each_value do |round|
             round.points.each do |player, points|
                 total_points[player] += points
             end
         end
-        total_points.sort_by { |player, points| -points }.to_h
+        @leaderboard = total_points.sort_by { |player, points| -points }.to_h
+        
+        # I dislike this, but let's give it a shot
+        # TODO: enclose this somewhere else... (observer pattern?)
+        Turbo::StreamsChannel.broadcast_replace_to(
+          "game_#{@id}",
+          target: "leaderboard-body",
+          partial: "games/leaderboard",
+          locals: { game: self }
+        )
     end
 
     def to_json(options = {})
@@ -78,6 +91,7 @@ class Game
         }.to_json(options)
     end
 
+    # update @leaderboard when it is implemented as a separate object (TODO)
     def update_state(state)
         @current_starting_player = state["current_starting_player"]
         @current_round = @rounds[state["current_round_number"]]
@@ -85,6 +99,8 @@ class Game
         @rounds.each do |round_number, round|
             round.update_state(state["rounds"][round_number.to_s])
         end
+        update_leaderboard
+        return true
     end
 
     def is_current_round(round)

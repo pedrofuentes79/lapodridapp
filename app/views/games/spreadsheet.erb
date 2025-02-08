@@ -1,7 +1,10 @@
-<script>
+<script id="game-state">
   var gameStarted = <%= @game.started ? 'true' : 'false' %>;
   var gameState = <%= raw @game.to_json %>;
 </script>
+<%= turbo_stream_from "game_#{@game.id}" %>
+
+
 
 <div class="tables-container">
   <table class="game-table">
@@ -67,14 +70,16 @@
 
 <!-- Leaderboard Table Placeholder -->
 <h2>Leaderboard</h2>
-<table class="game-table" id="leaderboard-table">
-  <thead>
-    <tr>
-      <th class='player-column'>Player</th>
-      <th>Points</th>
-    </tr>
-  </thead>
-  <tbody id="leaderboard-body">
-    <!-- Leaderboard data will be inserted here by JavaScript -->
-  </tbody>
-</table>
+<turbo-frame id="leaderboard">
+  <table class="game-table" id="leaderboard-table">
+    <thead>
+      <tr>
+        <th class='player-column'>Player</th>
+        <th>Points</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboard-body">
+      <%= render "leaderboard", game: @game %>
+    </tbody>
+  </table>
+</turbo-frame>

@@ -28,27 +28,6 @@ class Round
         @amount_of_cards - total_tricks_asked
     end
 
-    def ask_for_tricks(player, tricks_asked_by_player)
-        validate_player_turn!(player)
-        validate_asked_tricks_amount!(player, tricks_asked_by_player)
-
-        @asked_tricks[player] = tricks_asked_by_player
-        advance_turn
-    end
-
-    def register_tricks(player, tricks_made_by_player)
-        validate_all_players_have_asked_for_tricks!
-        validate_tricks_made_amount!(player, tricks_made_by_player)
-
-        @tricks_made[player] = tricks_made_by_player
-
-        if all_players_registered_tricks?
-          calculate_points
-          @game.next_round
-        else
-          advance_turn
-        end
-    end
 
     def update_state(state)
         validate_state!(state)
