@@ -2,15 +2,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const editableElements = document.querySelectorAll(".editable"); 
 
     // Initial leaderboard load
-    const gameId = document.querySelector('.points-cell').getAttribute('game-id');
-    fetchLeaderboard(gameId);
+    const pointsCell = document.querySelector('.points-cell');
+    if (pointsCell) {
+        const gameId = pointsCell.getAttribute('game-id');
+        fetchLeaderboard(gameId);
+    } else {
+        console.log('No element with class "points-cell" found.');
+    }
 
     // DBLCLICK ON SPAN TURNS INTO INPUT
     editableElements.forEach((element) => {
       element.addEventListener("dblclick", (event) => {
         const span = event.target;
         const player = span.dataset.player;
-        const round = span.dataset.round;
+        const roundNumber = span.dataset.round;
         const action = span.dataset.action;
         const value = span.innerText;
         const gameId = span.dataset.gameid;
@@ -25,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         input.type = "number";
         input.value = value === "-" ? "" : value;
         input.dataset.player = player;
-        input.dataset.round = round;
+        input.dataset.round = roundNumber;
         input.dataset.action = action;
         input.dataset.gameid = gameId;
         
@@ -65,24 +70,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 });
-
-function handleInputChange(event) {
-    const input = event.target;
-    const player = input.dataset.player;
-    const gameId = input.dataset.gameid;
-    const action = input.dataset.action;
-    const value = input.value;
-    const span = input.nextSibling;
-
-    // Update the span and remove input
-    span.innerText = value === "" ? "-" : value;
-    span.style.display = "inline";
-    input.remove();
-
-    // Update game state
-    updateGameState(input, action, player, value, gameId);
-    fetchLeaderboard(gameId);
-}
 
 function sendGameState(gameState, gameId) {
   console.log('Sending game id', gameId);
@@ -266,7 +253,7 @@ async function fetchLeaderboard(gameId) {
 async function refreshGameData(gameId) {
   try {
     // Fetch the updated game HTML from the server
-    const response = await fetch(`/game/${gameId}`);
+    const response = await fetch(`/games/${gameId}`);
     const html = await response.text();
     
     // Create a temporary container to parse the HTML
@@ -288,7 +275,7 @@ async function refreshGameData(gameId) {
     
     // Fetch and update leaderboard
     await fetchLeaderboard(gameId);
-    
+
     // Reattach event listeners to new elements
     attachEventListeners();
     
@@ -342,7 +329,6 @@ function attachEventListeners() {
         
         // Update game state and refresh all data
         await updateGameState(input, action, player, value, gameId);
-        await refreshGameData(gameId);
       };
       
       const handleKeyPress = (event) => {
@@ -361,28 +347,3 @@ function attachEventListeners() {
     });
   });
 }
-
-async function handleInputChange(event) {
-    const input = event.target;
-    const player = input.dataset.player;
-    const gameId = input.dataset.gameid;
-    const action = input.dataset.action;
-    const value = input.value;
-    const span = input.nextSibling;
-
-    span.innerText = value === "" ? "-" : value;
-    span.style.display = "inline";
-    input.remove();
-
-    await updateGameState(input, action, player, value, gameId);
-    await refreshGameData(gameId);
-}
-
-// Add initial event listener attachment when the page loads
-document.addEventListener("DOMContentLoaded", () => {
-    attachEventListeners();
-    
-    // Initial leaderboard load
-    const gameId = document.querySelector('.points-cell').getAttribute('game-id');
-    fetchLeaderboard(gameId);
-});
