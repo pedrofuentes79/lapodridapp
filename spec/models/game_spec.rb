@@ -18,7 +18,7 @@ RSpec.describe Game, type: :model do
       end
 
       it 'is not valid with non-string players' do
-        game = Game.new([1, 2, 3])
+        game = Game.new([ 1, 2, 3 ])
         expect(game).not_to be_valid
         expect(game.errors.full_messages).to include("Players must all be strings")
       end
@@ -30,7 +30,7 @@ RSpec.describe Game, type: :model do
       end
 
       it 'is not valid with mixed string and non-string players' do
-        game = Game.new(['Player1', 2, 'Player3'])
+        game = Game.new([ 'Player1', 2, 'Player3' ])
         expect(game).not_to be_valid
         expect(game.errors.full_messages).to include("Players must all be strings")
       end
@@ -51,7 +51,7 @@ RSpec.describe Game, type: :model do
       end
 
       it 'does not set up game state when invalid' do
-        game = Game.new([1, 2, 3])  # invalid players
+        game = Game.new([ 1, 2, 3 ])  # invalid players
         expect(game.id).not_to be_nil  # ID is always set
         expect(game.rounds).to be_nil
         expect(game.current_round).to be_nil
