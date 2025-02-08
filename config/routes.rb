@@ -17,24 +17,25 @@ Rails.application.routes.draw do
   # Legacy Sinatra routes (mounted at root)
   mount MyApp => "/legacy"
 
+  # TODO: remove the routes unused, and improve things all around here...
   # New Rails routes
   resources :games do
     member do
-      post 'start'
-      post 'ask_tricks'
-      post 'register_tricks'
-      get 'show'
-      get 'leaderboard'
-      get 'winners'
+      post "start"
+      post "ask_tricks"
+      post "register_tricks"
+      get "show"
+      get "leaderboard"
+      get "winners"
     end
   end
 
   # API routes
   namespace :api do
-    resources :games, only: [:create, :show, :update] do
+    resources :games, only: [ :create, :show, :update ] do
       member do
-        get 'leaderboard'
-        post 'update_game_state', to: 'games#update_state'
+        get "leaderboard"
+        post "update_game_state", to: "games#update_state"
       end
     end
   end

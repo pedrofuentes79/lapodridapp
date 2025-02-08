@@ -33,7 +33,7 @@
                   <%# MADE TRICKS%>
                   <span class="editable" 
                         data-player="<%= player %>" 
-                        data-round="<%= index %>" 
+                        data-round="<%= round.round_number %>" 
                         data-action="registerTricks" 
                         data-gameid="<%= @game.id %>"
                         data-editable="<%= round.asked_tricks.values.all? %>">
@@ -43,7 +43,7 @@
                   <%# ASKED TRICKS%>
                   <span class="editable" 
                         data-player="<%= player %>" 
-                        data-round="<%= index %>" 
+                        data-round="<%= round.round_number %>" 
                         data-action="askForTricks" 
                         data-gameid="<%= @game.id %>">
                     <%= round.asked_tricks[player] || "-" %>
