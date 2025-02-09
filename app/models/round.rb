@@ -32,7 +32,7 @@ class Round
     def update_state(state)
         validate_state!(state)
         apply_state(state)
-        calculate_points if state["tricks_made"].values.all?
+        calculate_points if state["tricks_made"] and state["tricks_made"].values.all?
     end
 
     def to_json
@@ -99,7 +99,8 @@ class Round
         raise ArgumentError, "Wrong player turn. Expected #{@current_player}, got #{player}" unless player == @current_player
     end
 
-    # is this allowed in ruby?
+    # TODO: dont raise an error, save the error in @game.errors and save the invalid state
+    # this is so that a user can fix the asked/made tricks one by one :D
     def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player = nil)
         if tricks_asked_for_until_this_player.nil?
             tricks_asked_for_until_this_player = sum_until_player({ "asked_tricks" => @asked_tricks }, player, "asked_tricks")
@@ -144,9 +145,19 @@ class Round
     end
 
     def validate_state!(state)
-        @game.players.each do |player|
-            validate_asked_tricks_amount!(player, state["asked_tricks"][player], sum_until_player(state, player, "asked_tricks"))
-            validate_tricks_made_amount!(player, state["tricks_made"][player], sum_until_player(state, player, "tricks_made"))
+        if state["asked_tricks"]
+            state["asked_tricks"].each do |player, tricks_asked|
+                validate_asked_tricks_amount!(player, tricks_asked, sum_until_player(state, player, "asked_tricks"))
+            end
+
+            if state["tricks_made"]
+                state["tricks_made"].each do |player, tricks_made|
+                    validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
+                end
+            end
+        end
+        if state["tricks_made"] and not state["asked_tricks"]
+            raise ArgumentError, "Not all players have asked for tricks"
         end
     end
 

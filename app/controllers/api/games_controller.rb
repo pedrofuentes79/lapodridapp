@@ -10,5 +10,10 @@ module Api
         render json: @game.errors, status: :unprocessable_entity
       end
     end
+
+    def leaderboard
+      @game = Game.find(params[:id])
+      render json: @game.leaderboard
+    end
   end
 end
