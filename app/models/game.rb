@@ -2,27 +2,20 @@ class Game
     include ActiveModel::Model
     include ActiveModel::Validations
 
-    attr_accessor :players, :current_starting_player, :rounds, :id, :max_round_number, :current_round, :started, :leaderboard
+    attr_accessor :players, :rounds, :id, :max_round_number, :current_round, :started, :leaderboard
 
     validates :players, presence: true
     validate :validate_players_format
 
     @@games = {}
 
-    # Class methods
     def self.find(id)
         @@games[id]
     end
 
-    def self.all
-        @@games.values
-    end
-
-    # Public instance methods
-    def initialize(players = nil, rounds = {})
+    def initialize(players = nil, rounds = nil)
       @id = SecureRandom.uuid
       @players = players
-      @current_starting_player = players&.first
       @max_round_number = 0
       @leaderboard = {}
 
@@ -37,7 +30,6 @@ class Game
     end
 
     def start
-        puts "Game started with id #{@id}"
         @started = true
     end
 
@@ -70,9 +62,12 @@ class Game
         end
         @leaderboard = total_points.sort_by { |player, points| -points }.to_h
 
-        # I dislike this, but let's give it a shot
-        # TODO: enclose this somewhere else... (observer pattern?)
-        Turbo::StreamsChannel.broadcast_replace_to(
+        update_leaderboard_turbo
+    end
+
+    def update_leaderboard_turbo
+      # TODO: use some kind of observer pattern for this?
+      Turbo::StreamsChannel.broadcast_replace_to(
           "game_#{@id}",
           target: "leaderboard-body",
           partial: "games/leaderboard",
@@ -84,7 +79,6 @@ class Game
         {
             id: @id,
             players: @players,
-            current_starting_player: @current_starting_player,
             rounds: @rounds.map { |round_number, round| [ round_number, round.to_json ] }.to_h,
             current_round_number: @current_round.round_number,
             started: @started
@@ -93,11 +87,14 @@ class Game
 
     # update @leaderboard when it is implemented as a separate object (TODO)
     def update_state(state)
-        @current_starting_player = state["current_starting_player"]
-        @current_round = @rounds[state["current_round_number"]]
-        @started = state["started"]
-        @rounds.each do |round_number, round|
-            round.update_state(state["rounds"][round_number.to_s])
+        if state["current_round_number"]
+          current_round_idx = state["current_round_number"].to_i - 1
+          @current_round = @rounds[current_round_idx]
+        end
+
+        state["rounds"].each do |round_number, round_state|
+            round_idx = round_number.to_i
+            @rounds[round_idx].update_state(round_state)
         end
         update_leaderboard
         true
@@ -126,6 +123,9 @@ class Game
     end
 
     def parse_rounds(rounds)
+      # TODO: improve rounds format, very undeclarative now
+      # current format is "round_number, amount_of_cards"
+
       return if rounds.nil? || rounds.empty?
 
       @rounds = rounds.map.with_index do |(round_str, trump), index|

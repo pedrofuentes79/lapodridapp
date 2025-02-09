@@ -1,5 +1,7 @@
 require "test_helper"
 
+# TODO: move this to minitest
+
 class RoundTest < ActiveSupport::TestCase
   def setup
     @players = [ "Pedro", "Auro", "Leon" ]
