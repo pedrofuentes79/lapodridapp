@@ -4,15 +4,6 @@ const GAME_STATE_SELECTOR = '#game-state';
 document.addEventListener("DOMContentLoaded", () => {
     const editableElements = document.querySelectorAll(".editable"); 
 
-    // Initial leaderboard load
-    const pointsCell = document.querySelector('.points-cell');
-    if (pointsCell) {
-        const gameId = pointsCell.getAttribute('game-id');
-        fetchLeaderboard(gameId);
-    } else {
-        console.log('No element with class "points-cell" found.');
-    }
-
     // DBLCLICK ON SPAN TURNS INTO INPUT
     editableElements.forEach((element) => {
       element.addEventListener("dblclick", (event) => {
@@ -54,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
           
           // Update game state
           updateGameState(input, action, player, value, gameId);
-          fetchLeaderboard(gameId);
         };
         
         const handleKeyPress = (event) => {
@@ -200,69 +190,6 @@ function gameStateFromDOM() {
   console.log('Game state:', decodedGameState);
   return JSON.parse(decodedGameState);
 }
-
-async function fetchLeaderboard(gameId) {
-  return;
-  try {
-    console.log('Fetching leaderboard for game:', gameId);
-    const response = await fetch(`/api/games/${gameId}/leaderboard`);
-    console.log('Response:', response);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const leaderboard = await response.json();
-    console.log('Received leaderboard data:', leaderboard);
-
-    const leaderboardBody = document.getElementById('leaderboard-body');
-    if (!leaderboardBody) {
-      console.error('Could not find leaderboard-body element');
-      return;
-    }
-    
-    leaderboardBody.innerHTML = '';
-
-    if (Object.keys(leaderboard).length === 0) {
-      console.log('Leaderboard is empty');
-      const row = document.createElement('tr');
-      const cell = document.createElement('td');
-      cell.colSpan = 2;
-      cell.textContent = 'No scores yet';
-      row.appendChild(cell);
-      leaderboardBody.appendChild(row);
-      return;
-    }
-
-    // Sort leaderboard by points in descending order
-    const sortedLeaderboard = Object.entries(leaderboard)
-      .sort(([,a], [,b]) => b - a);
-
-    sortedLeaderboard.forEach(([player, points], index) => {
-      const row = document.createElement('tr');
-      const playerCell = document.createElement('td');
-      const pointsCell = document.createElement('td');
-
-      playerCell.textContent = player;
-      pointsCell.textContent = points;
-
-      // Highlight the leader
-      if (index === 0) {
-        row.classList.add('leader');
-      }
-
-      row.appendChild(playerCell);
-      row.appendChild(pointsCell);
-      leaderboardBody.appendChild(row);
-    });
-  } catch (error) {
-    console.error('Failed to fetch leaderboard:', error);
-    const leaderboardBody = document.getElementById('leaderboard-body');
-    if (leaderboardBody) {
-      leaderboardBody.innerHTML = '<tr><td colspan="2">Error loading leaderboard</td></tr>';
-    }
-  }
-}
-
 
 function attachEventListeners() {
   const editableElements = document.querySelectorAll(".editable");
