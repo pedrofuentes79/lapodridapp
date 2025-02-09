@@ -1,8 +1,10 @@
 require 'rails_helper'
 
+# TODO: move this to minitest
+
 RSpec.describe Game, type: :model do
-    let(:players) { [ 'Pedro', 'Auro', 'Leon' ] }
-    let(:rounds) { { [ 1, 4 ] => 'trump', [ 2, 5 ] => 'trump', [ 3, 4 ] => 'trump' } }
+    let(:players) { [ "Pedro", "Auro", "Leon" ] }
+    let(:rounds) { { "1, 4" => "trump", "2, 5" => "trump", "3, 4" => "trump" } }
     let(:game) { Game.new(players, rounds) }
 
     describe 'validations' do
@@ -37,10 +39,11 @@ RSpec.describe Game, type: :model do
     end
 
     describe 'initialization' do
-      it 'initializes with players and a starting player' do
+      # TODO: revise these tests...
+      it 'works with players and without rounds' do
         game = Game.new(players)
         expect(game.players).to eq(players)
-        expect(game.current_starting_player).to eq('Pedro')
+        expect(game.rounds).to be_nil
       end
 
       it 'sets up initial state when valid' do
@@ -76,8 +79,8 @@ RSpec.describe Game, type: :model do
       end
     end
 
-    xit 'is created also by passing the rounds' do
-      round1 = game.next_round
+    it 'is created also by passing the rounds' do
+      round1 = game.current_round
       expect(round1.round_number).to eq(1)
       expect(round1.amount_of_cards).to eq(4)
       expect(round1.is_trump?).to be true
@@ -92,86 +95,77 @@ RSpec.describe Game, type: :model do
       expect(round3.amount_of_cards).to eq(4)
       expect(round3.is_trump?).to be true
 
-      expect(game.next_round).to be_nil
+      expect(game.next_round).to be_a(NullRound)
     end
 
-  xit 'allows players to ask for tricks' do
+  it 'allows players to ask for tricks' do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    game.ask_for_tricks('Leon', 0)
-    expect(game.current_round.asked_tricks).to eq({ 'Pedro' => 1, 'Auro' => 2, 'Leon' => 0 })
+    game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
+    } })
+    expect(game.current_round.asked_tricks).to eq({ "Pedro" => 1, "Auro" => 2, "Leon" => 0 })
   end
 
-  xit 'does not allow last player to ask for tricks if total sum equals amount of cards per round' do
+  it 'does not allow last player to ask for tricks if total sum equals amount of cards per round' do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    expect { game.ask_for_tricks('Leon', 1) }.to raise_error(ArgumentError)
+
+    expect { game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 } }
+    } }) }.to raise_error(ArgumentError)
   end
 
-  xit "does not allow a player to ask for tricks if it is not their turn" do
+  it 'allows player to register how many tricks they made' do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    expect { game.ask_for_tricks('Leon', 1) }.to raise_error(ArgumentError, "Wrong player turn. Expected Auro, got Leon")
+    game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
+    } })
+    game.update_state({ "rounds" => { "1" =>
+      { "tricks_made" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 } }
+    } })
+    expect(game.current_round.tricks_made).to eq({ "Pedro" => 1, "Auro" => 2, "Leon" => 1 })
   end
 
-  xit 'advances turn after a player asks for tricks' do
+  it 'does not allow a player to register more tricks than the amount of cards per round' do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    expect(game.current_round.current_player).to eq('Auro')
+    game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
+    } })
+    expect { game.update_state({ "rounds" => { "1" =>
+      { "tricks_made" => { "Pedro" => 5 } }
+    } }) }.to raise_error(ArgumentError)
   end
 
-  xit 'makes first player current once all players have asked for tricks' do
+  it "does not allow a player to register less than 0 tricks" do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    game.ask_for_tricks('Leon', 0)
-    expect(game.current_round.current_player).to eq('Pedro')
+    game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
+    } })
+    expect { game.update_state({ "rounds" => { "1" =>
+      { "tricks_made" => { "Pedro" => -1 } }
+    } }) }.to raise_error(ArgumentError)
   end
 
-  xit 'allows player to register how many tricks they made' do
+  it "does not allow a player to register tricks if all players have not asked for tricks" do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    game.ask_for_tricks('Leon', 0)
-    game.register_tricks('Pedro', 1)
-    game.register_tricks('Auro', 2)
-    game.register_tricks('Leon', 1)
-    expect(game.current_round.tricks_made).to eq({ 'Pedro' => 1, 'Auro' => 2, 'Leon' => 1 })
+    game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => nil } }
+    } })
+    expect { game.update_state({ "rounds" => { "1" =>
+      { "tricks_made" => { "Pedro" => 1 } }
+    } }) }.to raise_error(ArgumentError)
   end
 
-  xit 'does not allow a player to register more tricks than the amount of cards per round' do
+  it "know how many points each player had per round" do
     game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    game.ask_for_tricks('Leon', 0)
-    expect { game.register_tricks('Pedro', 5) }.to raise_error(ArgumentError, "Invalid amount of tricks made by that player")
-  end
+    game.update_state({ "rounds" => { "1" =>
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
+    } })
 
-  xit "does not allow a player to register less than 0 tricks" do
-    game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    game.ask_for_tricks('Leon', 0)
-    expect { game.register_tricks('Pedro', -1) }.to raise_error(ArgumentError, "Invalid amount of tricks made by that player")
-  end
 
-  xit "does not allow a player to register tricks if all players have not asked for tricks" do
-    game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    expect { game.register_tricks('Pedro', 1) }.to raise_error(ArgumentError, "Cannot register tricks if all players have not asked for tricks")
-  end
+    game.update_state({ "rounds" => { "1" =>
+      { "tricks_made" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 } }
+    } })
 
-  xit "know how many points each player had per round" do
-    game.start()
-    game.ask_for_tricks('Pedro', 1)
-    game.ask_for_tricks('Auro', 2)
-    game.ask_for_tricks('Leon', 0)
-    game.register_tricks('Pedro', 1)
-    game.register_tricks('Auro', 2)
-    game.register_tricks('Leon', 1)
     expect(game.current_round.points).to eq({ 'Pedro' => 12, 'Auro' => 14, 'Leon' => 1 })
   end
 end

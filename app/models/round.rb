@@ -32,7 +32,7 @@ class Round
     def update_state(state)
         validate_state!(state)
         apply_state(state)
-        calculate_points if state["tricks_made"] and state["tricks_made"].values.all?
+        calculate_points
     end
 
     def to_json
@@ -62,8 +62,10 @@ class Round
     end
 
     def calculate_points
-        @game.players.each do |player|
-            @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
+        if @tricks_made.values.all? and @asked_tricks.values.all?
+            @game.players.each do |player|
+                @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
+            end
         end
     end
 
@@ -140,30 +142,33 @@ class Round
         end
     end
 
-    def validate_all_players_have_asked_for_tricks!
-        raise ArgumentError, "Not all players have asked for tricks" unless @asked_tricks.values.all?
+    def validate_all_players_have_asked_for_tricks!(state)
+        if state["tricks_made"] and not ((state["asked_tricks"] and state["asked_tricks"].values.all?) or @asked_tricks.values.all?)
+            raise ArgumentError, "Not all players have asked for tricks"
+        end
     end
 
+    # TODO: when receiving update_state, parse and convert it to an object, called RoundState :D
     def validate_state!(state)
         if state["asked_tricks"]
             state["asked_tricks"].each do |player, tricks_asked|
                 validate_asked_tricks_amount!(player, tricks_asked, sum_until_player(state, player, "asked_tricks"))
             end
+        end
 
-            if state["tricks_made"]
-                state["tricks_made"].each do |player, tricks_made|
-                    validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
-                end
+        if state["tricks_made"]
+            state["tricks_made"].each do |player, tricks_made|
+                validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
             end
         end
-        if state["tricks_made"] and not state["asked_tricks"]
-            raise ArgumentError, "Not all players have asked for tricks"
-        end
+
+        validate_all_players_have_asked_for_tricks!(state)
     end
 
     def apply_state(state)
-        @asked_tricks = state["asked_tricks"]
-        @tricks_made = state["tricks_made"]
+        # this leaves the possibility that the state only has the tricks_made and that a previous update wrote the asked_tricks
+        @asked_tricks = state["asked_tricks"] if state["asked_tricks"]
+        @tricks_made = state["tricks_made"] if state["tricks_made"]
     end
 
     def sum_until_player(state, player, key)
