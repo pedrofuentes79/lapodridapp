@@ -69,17 +69,14 @@
 </div>
 
 <!-- Leaderboard Table Placeholder -->
-<h2>Leaderboard</h2>
-<turbo-frame id="leaderboard">
-  <table class="game-table" id="leaderboard-table">
-    <thead>
-      <tr>
-        <th class='player-column'>Player</th>
-        <th>Points</th>
-      </tr>
-    </thead>
-    <tbody id="leaderboard-body">
-      <%= render "leaderboard", game: @game %>
-    </tbody>
-  </table>
-</turbo-frame>
+<table class="game-table" id="leaderboard-table">
+  <thead>
+    <tr>
+      <th class='player-column'>Player</th>
+      <th>Points</th>
+    </tr>
+  </thead>
+  <turbo-frame>
+    <%= render "leaderboard", game: @game %>
+  </turbo-frame>
+</table>    
