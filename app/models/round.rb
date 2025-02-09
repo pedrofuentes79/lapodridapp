@@ -57,6 +57,7 @@ class Round
         @game.players.each do |player|
             @asked_tricks[player] = nil
             @tricks_made[player] = nil
+            @points[player] = 0
         end
     end
 
