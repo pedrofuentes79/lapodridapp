@@ -24,7 +24,6 @@ class Game
         parse_rounds(rounds)
         @strategy = PointCalculationStrategy.new()
       else
-        puts "Game is not valid"
         puts errors.full_messages
       end
     end
@@ -64,6 +63,7 @@ class Game
             @rounds[round_idx].update_state(round_state)
         end
         @leaderboard.update
+        update_turbo_observer
         true
     end
 
@@ -105,7 +105,6 @@ class Game
         starting_player = @players[index % @players.length]
         round = Round.new(self, round_numbers.first, round_numbers.last, trump == "trump", starting_player)
         @current_round = round if index == 0 # set current round to the first round
-        puts "Set current round to #{round.round_number}"
 
         [ round_numbers.first, round ]
       end.to_h
