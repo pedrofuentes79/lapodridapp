@@ -39,7 +39,6 @@ class Round
         {
             round_number: @round_number,
             amount_of_cards: @amount_of_cards,
-            current_player: @current_player,
             asked_tricks: @asked_tricks,
             tricks_made: @tricks_made,
             points: @points,
@@ -69,17 +68,8 @@ class Round
         end
     end
 
-    def advance_turn
-        current_index = @game.players.index(@current_player)
-        @current_player = @game.players[(current_index + 1) % @game.players.length]
-    end
-
-    def all_players_registered_tricks?
-        @tricks_made.values.all?
-    end
-
     def last_player
-        @game.next_player_to(@current_player, -1)
+        @game.next_player_to(@starting_player, -1)
     end
 
     def remaining_player_to_ask_for_tricks
@@ -97,10 +87,6 @@ class Round
     end
 
     # Validations
-    def validate_player_turn!(player)
-        raise ArgumentError, "Wrong player turn. Expected #{@current_player}, got #{player}" unless player == @current_player
-    end
-
     # TODO: dont raise an error, save the error in @game.errors and save the invalid state
     # this is so that a user can fix the asked/made tricks one by one :D
     def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player = nil)
@@ -116,14 +102,6 @@ class Round
 
         if is_last_player?(player) && tricks_asked_for_until_this_player + tricks_asked_by_player == @amount_of_cards
             raise ArgumentError, "Last player cannot ask for tricks if total sum equals amount of cards per round"
-        end
-    end
-
-    def tricks_made_sum
-        if @tricks_made.values.any?
-            @tricks_made.values.compact.sum
-        else
-            0
         end
     end
 
@@ -143,7 +121,7 @@ class Round
     end
 
     def validate_all_players_have_asked_for_tricks!(state)
-        if state["tricks_made"] and not ((state["asked_tricks"] and state["asked_tricks"].values.all?) or @asked_tricks.values.all?)
+        if (not state["asked_tricks"]) or (not state["asked_tricks"].values.all?)
             raise ArgumentError, "Not all players have asked for tricks"
         end
     end
@@ -160,13 +138,11 @@ class Round
             state["tricks_made"].each do |player, tricks_made|
                 validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
             end
+            validate_all_players_have_asked_for_tricks!(state)
         end
-
-        validate_all_players_have_asked_for_tricks!(state)
     end
 
     def apply_state(state)
-        # this leaves the possibility that the state only has the tricks_made and that a previous update wrote the asked_tricks
         @asked_tricks = state["asked_tricks"] if state["asked_tricks"]
         @tricks_made = state["tricks_made"] if state["tricks_made"]
     end

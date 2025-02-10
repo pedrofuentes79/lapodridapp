@@ -117,54 +117,43 @@ RSpec.describe Game, type: :model do
   it 'allows player to register how many tricks they made' do
     game.start()
     game.update_state({ "rounds" => { "1" =>
-      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
-    } })
-    game.update_state({ "rounds" => { "1" =>
-      { "tricks_made" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 } }
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 },
+        "tricks_made" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 }
+      }
     } })
     expect(game.current_round.tricks_made).to eq({ "Pedro" => 1, "Auro" => 2, "Leon" => 1 })
   end
 
   it 'does not allow a player to register more tricks than the amount of cards per round' do
     game.start()
-    game.update_state({ "rounds" => { "1" =>
-      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
-    } })
     expect { game.update_state({ "rounds" => { "1" =>
-      { "tricks_made" => { "Pedro" => 5 } }
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 }, 
+        "tricks_made" => { "Pedro" => 5 } }
     } }) }.to raise_error(ArgumentError)
   end
 
   it "does not allow a player to register less than 0 tricks" do
     game.start()
-    game.update_state({ "rounds" => { "1" =>
-      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
-    } })
     expect { game.update_state({ "rounds" => { "1" =>
-      { "tricks_made" => { "Pedro" => -1 } }
-    } }) }.to raise_error(ArgumentError)
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 },
+        "tricks_made" => { "Pedro" => -1 } } } })
+    }.to raise_error(ArgumentError)
   end
 
   it "does not allow a player to register tricks if all players have not asked for tricks" do
     game.start()
-    game.update_state({ "rounds" => { "1" =>
-      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => nil } }
-    } })
     expect { game.update_state({ "rounds" => { "1" =>
-      { "tricks_made" => { "Pedro" => 1 } }
-    } }) }.to raise_error(ArgumentError)
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => nil },
+        "tricks_made" => { "Pedro" => 1 } } } })
+    }.to raise_error(ArgumentError)
   end
 
   it "know how many points each player had per round" do
     game.start()
     game.update_state({ "rounds" => { "1" =>
-      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 } }
-    } })
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 },
+        "tricks_made" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 } } } })
 
-
-    game.update_state({ "rounds" => { "1" =>
-      { "tricks_made" => { "Pedro" => 1, "Auro" => 2, "Leon" => 1 } }
-    } })
 
     expect(game.current_round.points).to eq({ 'Pedro' => 12, 'Auro' => 14, 'Leon' => 1 })
   end
