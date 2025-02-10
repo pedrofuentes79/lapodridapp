@@ -127,7 +127,7 @@ RSpec.describe Game, type: :model do
   it 'does not allow a player to register more tricks than the amount of cards per round' do
     game.start()
     expect { game.update_state({ "rounds" => { "1" =>
-      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 }, 
+      { "asked_tricks" => { "Pedro" => 1, "Auro" => 2, "Leon" => 0 },
         "tricks_made" => { "Pedro" => 5 } }
     } }) }.to raise_error(ArgumentError)
   end
