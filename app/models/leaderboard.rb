@@ -2,6 +2,7 @@
 class Leaderboard
     def initialize(game)
         @game = game
+        @player_points = {}
     end
 
     def update
@@ -11,17 +12,13 @@ class Leaderboard
                 total_points[player] += points
             end
         end
-        @leaderboard = total_points.sort_by { |player, points| -points }.to_h
-
-        update_turbo_observer
+        @player_points = total_points.sort_by { |player, points| -points }.to_h
+        @game.update_turbo_observer
     end
 
-    def update_turbo_observer
-        Turbo::StreamsChannel.broadcast_replace_to(
-            "game_#{@game.id}",
-            target: "leaderboard-body",
-            partial: "games/leaderboard",
-            locals: { game: @game }
-        )
+    def each
+        @player_points.each do |player, points|
+            yield player, points
+        end
     end
 end
