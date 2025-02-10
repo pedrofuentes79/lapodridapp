@@ -69,7 +69,11 @@ class Round
     end
 
     def last_player
-        @game.next_player_to(@starting_player, -1)
+        @game.players.last_player(@starting_player)
+    end
+
+    def is_last_player?(player)
+        @game.players.is_last_player?(player, @starting_player)
     end
 
     def remaining_player_to_ask_for_tricks
@@ -78,12 +82,6 @@ class Round
 
     def all_players_asked_except_one?
         @asked_tricks.values.compact.length == @game.players.length - 1
-    end
-
-    def is_last_player?(player)
-        starting_player_index = @game.players.index(@starting_player)
-        last_player_index = (starting_player_index - 1) % @game.players.length
-        player == @game.players[last_player_index]
     end
 
     # Validations
@@ -128,19 +126,25 @@ class Round
 
     # TODO: when receiving update_state, parse and convert it to an object, called RoundState :D
     def validate_state!(state)
-        if state["asked_tricks"]
-            state["asked_tricks"].each do |player, tricks_asked|
-                validate_asked_tricks_amount!(player, tricks_asked, sum_until_player(state, player, "asked_tricks"))
-            end
-        end
+        validate_asked_tricks!(state)
+        validate_tricks_made!(state)
+    end
 
+    def validate_asked_tricks!(state)
+        return unless state["asked_tricks"]
+
+        state["asked_tricks"].each do |player, tricks_asked|
+            validate_asked_tricks_amount!(player, tricks_asked, sum_until_player(state, player, "asked_tricks"))
+        end
+    end
+
+    def validate_tricks_made!(state)
         if state["tricks_made"] and state["tricks_made"].values.any?
             validate_all_players_have_asked_for_tricks!(state)
 
             state["tricks_made"].each do |player, tricks_made|
                 validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
             end
-
         end
     end
 

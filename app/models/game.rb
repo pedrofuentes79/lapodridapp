@@ -2,10 +2,8 @@ class Game
     include ActiveModel::Model
     include ActiveModel::Validations
 
-    attr_accessor :players, :rounds, :id, :max_round_number, :current_round, :started, :leaderboard
-
-    validates :players, presence: true
-    validate :validate_players_format
+    attr_reader :players
+    attr_accessor :rounds, :id, :max_round_number, :current_round, :started, :leaderboard
 
     @@games = {}
 
@@ -15,9 +13,10 @@ class Game
 
     def initialize(players = nil, rounds = nil)
       @id = SecureRandom.uuid
-      @players = players
+      @players = GamePlayers.new(players)
       @max_round_number = 0
       @leaderboard = Leaderboard.new(self)
+      @broadcaster = GameBroadcaster.new(self)
 
       if valid?
         @@games[@id] = self
@@ -36,11 +35,6 @@ class Game
         next_round_number = @current_round.round_number + 1
         @current_round = @rounds[next_round_number] || NullRound.new()
         @current_round
-    end
-
-    def next_player_to(player, offset)
-        current_index = @players.index(player)
-        @players[(current_index + offset) % @players.length]
     end
 
     def to_json(options = {})
@@ -63,7 +57,7 @@ class Game
             @rounds[round_idx].update_state(round_state)
         end
         @leaderboard.update
-        update_turbo_observer
+        @broadcaster.broadcast_update
         true
     end
 
@@ -75,24 +69,8 @@ class Game
         @strategy.calculate_points(asked_tricks, tricks_made)
     end
 
-    def update_turbo_observer
-      Turbo::StreamsChannel.broadcast_replace_to(
-          "game_#{@id}",
-          target: "leaderboard-body",
-          partial: "games/leaderboard",
-          locals: { game: self }
-      )
-    end
-
     private
 
-    def validate_players_format
-      return if players.nil?
-
-      unless players.all? { |p| p.is_a?(String) }
-        errors.add(:players, "must all be strings")
-      end
-    end
 
     def parse_rounds(rounds)
       # TODO: improve rounds format, very undeclarative now

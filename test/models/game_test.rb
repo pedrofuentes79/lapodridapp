@@ -11,34 +11,11 @@ class GameTest < ActiveSupport::TestCase
     game = Game.new(@players)
     assert game.valid?
   end
-
-  test "is not valid without players" do
-    game = Game.new
-    assert_not game.valid?
-    assert_includes game.errors.full_messages, "Players can't be blank"
-  end
-
-  test "is not valid with non-string players" do
-    game = Game.new([ 1, 2, 3 ])
-    assert_not game.valid?
-    assert_includes game.errors.full_messages, "Players must all be strings"
-  end
-
-  test "is not valid with empty array of players" do
-    game = Game.new([])
-    assert_not game.valid?
-    assert_includes game.errors.full_messages, "Players can't be blank"
-  end
-
-  test "is not valid with mixed string and non-string players" do
-    game = Game.new([ "Player1", 2, "Player3" ])
-    assert_not game.valid?
-    assert_includes game.errors.full_messages, "Players must all be strings"
-  end
+  # By the way, the players array is validated in the GamePlayers model
 
   test "works with players and without rounds" do
     game = Game.new(@players)
-    assert_equal @players, game.players
+    assert_equal @players, game.players.to_a
     assert_nil game.rounds
   end
 
