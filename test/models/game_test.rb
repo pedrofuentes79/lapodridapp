@@ -31,7 +31,7 @@ class GameTest < ActiveSupport::TestCase
   end
 
   test "is not valid with mixed string and non-string players" do
-    game = Game.new([ 'Player1', 2, 'Player3' ])
+    game = Game.new([ "Player1", 2, "Player3" ])
     assert_not game.valid?
     assert_includes game.errors.full_messages, "Players must all be strings"
   end
@@ -69,7 +69,7 @@ class GameTest < ActiveSupport::TestCase
   end
 
   test "returns nil when finding non-existent game" do
-    assert_nil Game.find('non-existent-id')
+    assert_nil Game.find("non-existent-id")
   end
 
   test "is created also by passing the rounds" do

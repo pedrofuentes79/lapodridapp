@@ -111,6 +111,4 @@ class Game
       end.to_h
       @max_round_number = @rounds.keys.max
     end
-
-
 end
