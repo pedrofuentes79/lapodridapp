@@ -84,7 +84,6 @@ class RoundTest < ActiveSupport::TestCase
     expected_json = {
       round_number: 1,
       amount_of_cards: 4,
-      current_player: "Pedro",
       asked_tricks: { "Pedro" => nil, "Auro" => nil, "Leon" => nil },
       tricks_made: { "Pedro" => nil, "Auro" => nil, "Leon" => nil },
       points: { "Pedro" => 0, "Auro" => 0, "Leon" => 0 },

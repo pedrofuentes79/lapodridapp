@@ -53,28 +53,6 @@ class Game
         @players[(current_index + offset) % @players.length]
     end
 
-    def update_leaderboard
-        total_points = Hash.new(0)
-        @rounds.each_value do |round|
-            round.points.each do |player, points|
-                total_points[player] += points
-            end
-        end
-        @leaderboard = total_points.sort_by { |player, points| -points }.to_h
-
-        update_leaderboard_turbo
-    end
-
-    def update_leaderboard_turbo
-      # TODO: use some kind of observer pattern for this?
-      Turbo::StreamsChannel.broadcast_replace_to(
-          "game_#{@id}",
-          target: "leaderboard-body",
-          partial: "games/leaderboard",
-          locals: { game: self }
-        )
-    end
-
     def to_json(options = {})
         {
             id: @id,
@@ -85,7 +63,6 @@ class Game
         }.to_json(options)
     end
 
-    # update @leaderboard when it is implemented as a separate object (TODO)
     def update_state(state)
         if state["current_round_number"]
           current_round_idx = state["current_round_number"].to_i - 1
@@ -96,7 +73,7 @@ class Game
             round_idx = round_number.to_i
             @rounds[round_idx].update_state(round_state)
         end
-        update_leaderboard
+        @leaderboard.update
         true
     end
 
@@ -106,10 +83,6 @@ class Game
 
     def calculate_points(asked_tricks, tricks_made)
         @strategy.calculate_points(asked_tricks, tricks_made)
-    end
-
-    def total_tricks_asked
-        current_round.total_tricks_asked if current_round
     end
 
     private
