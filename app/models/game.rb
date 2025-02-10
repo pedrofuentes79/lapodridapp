@@ -17,7 +17,7 @@ class Game
       @id = SecureRandom.uuid
       @players = players
       @max_round_number = 0
-      @leaderboard = {}
+      @leaderboard = Leaderboard.new(self)
 
       if valid?
         @@games[@id] = self
@@ -35,8 +35,7 @@ class Game
 
     def next_round
         next_round_number = @current_round.round_number + 1
-        @current_round = @rounds[next_round_number]
-        @current_round = NullRound.new() if @current_round.nil?
+        @current_round = @rounds[next_round_number] || NullRound.new()
         @current_round
     end
 
@@ -57,8 +56,7 @@ class Game
 
     def update_state(state)
         if state["current_round_number"]
-          current_round_idx = state["current_round_number"].to_i - 1
-          @current_round = @rounds[current_round_idx]
+          @current_round = @rounds[state["current_round_number"]]
         end
 
         state["rounds"].each do |round_number, round_state|
@@ -75,6 +73,15 @@ class Game
 
     def calculate_points(asked_tricks, tricks_made)
         @strategy.calculate_points(asked_tricks, tricks_made)
+    end
+
+    def update_turbo_observer
+      Turbo::StreamsChannel.broadcast_replace_to(
+          "game_#{@id}",
+          target: "leaderboard-body",
+          partial: "games/leaderboard",
+          locals: { game: self }
+      )
     end
 
     private
@@ -98,9 +105,12 @@ class Game
         starting_player = @players[index % @players.length]
         round = Round.new(self, round_numbers.first, round_numbers.last, trump == "trump", starting_player)
         @current_round = round if index == 0 # set current round to the first round
+        puts "Set current round to #{round.round_number}"
 
         [ round_numbers.first, round ]
       end.to_h
       @max_round_number = @rounds.keys.max
     end
+
+
 end
