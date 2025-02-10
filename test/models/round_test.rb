@@ -1,7 +1,5 @@
 require "test_helper"
 
-# TODO: move this to minitest
-
 class RoundTest < ActiveSupport::TestCase
   def setup
     @players = [ "Pedro", "Auro", "Leon" ]
@@ -104,5 +102,16 @@ class RoundTest < ActiveSupport::TestCase
     assert_equal state["asked_tricks"], @round.asked_tricks
     assert_equal state["tricks_made"], @round.tricks_made
     assert_equal state["points"], @round.points
+  end
+
+  test "updates state with nil values instead of empty hashes" do
+    @round.update_state({
+      "asked_tricks" => { "Pedro" => 2, "Auro" => nil, "Leon" => nil },
+      "tricks_made" => { "Pedro" => nil, "Auro" => nil, "Leon" => nil }
+    })
+
+    assert_equal({ "Pedro" => 2, "Auro" => nil, "Leon" => nil }, @round.asked_tricks)
+    assert_equal({ "Pedro" => nil, "Auro" => nil, "Leon" => nil }, @round.tricks_made)
+    assert_equal({ "Pedro" => 0, "Auro" => 0, "Leon" => 0 }, @round.points)
   end
 end
