@@ -134,11 +134,13 @@ class Round
             end
         end
 
-        if state["tricks_made"]
+        if state["tricks_made"] and state["tricks_made"].values.any?
+            validate_all_players_have_asked_for_tricks!(state)
+
             state["tricks_made"].each do |player, tricks_made|
                 validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
             end
-            validate_all_players_have_asked_for_tricks!(state)
+
         end
     end
 
