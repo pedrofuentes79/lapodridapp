@@ -189,7 +189,6 @@ class NullRound
         {
             round_number: @round_number,
             amount_of_cards: 0,
-            current_player: "",
             asked_tricks: {},
             tricks_made: {},
             points: {},

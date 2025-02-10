@@ -33,14 +33,6 @@ class Game
         @started = true
     end
 
-    def ask_for_tricks(player, tricks)
-        @current_round.ask_for_tricks(player, tricks)
-    end
-
-    def register_tricks(player, tricks)
-        @current_round.register_tricks(player, tricks)
-    end
-
     def next_round
         next_round_number = @current_round.round_number + 1
         @current_round = @rounds[next_round_number]
