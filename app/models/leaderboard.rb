@@ -39,6 +39,6 @@ class Leaderboard
             end
         end
 
-        scores
+        scores.sort_by { |_player, points| -points }.to_h
     end
 end
