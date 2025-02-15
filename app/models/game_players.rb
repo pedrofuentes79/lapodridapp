@@ -2,7 +2,7 @@ class GamePlayers
   include ActiveModel::Model
   include ActiveModel::Validations
   include Enumerable
-  
+
   attr_reader :players
 
   validates :players, presence: { message: "can't be blank" }
