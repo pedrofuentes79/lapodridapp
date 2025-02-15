@@ -58,9 +58,9 @@
           
           <%# forbidden value cell %>
           <td class="forbidden-value-cell">
-            <div class="forbidden-value">
-              <%= round.last_player_forbidden_value %>
-            </div>
+            <turbo-frame>
+              <%= render "rounds/forbidden_value", round: round %>
+            </turbo-frame>
           </td>
         </tr>
       <% end %>

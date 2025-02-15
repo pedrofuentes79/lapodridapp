@@ -3,7 +3,7 @@ class Game
     include ActiveModel::Validations
 
     attr_reader :players
-    attr_accessor :rounds, :id, :max_round_number, :current_round, :started, :leaderboard
+    attr_accessor :rounds, :id, :current_round, :started, :leaderboard, :broadcaster
 
     @@games = {}
 
@@ -14,7 +14,6 @@ class Game
     def initialize(players = nil, rounds = nil)
       @id = SecureRandom.uuid
       @players = GamePlayers.new(players)
-      @max_round_number = 0
       @leaderboard = Leaderboard.new(self)
       @broadcaster = GameBroadcaster.new(self)
 
@@ -57,7 +56,7 @@ class Game
             @rounds[round_idx].update_state(round_state)
         end
         @leaderboard.update
-        @broadcaster.broadcast_update
+        @broadcaster.broadcast_update_game
         true
     end
 
@@ -86,6 +85,5 @@ class Game
 
         [ round_numbers.first, round ]
       end.to_h
-      @max_round_number = @rounds.keys.max
     end
 end

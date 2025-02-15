@@ -22,7 +22,6 @@ class GameTest < ActiveSupport::TestCase
   test "sets up initial state when valid" do
     game = Game.new(@players)
     assert_not_nil game.id
-    assert_equal 0, game.max_round_number
     assert_nil game.started
   end
 

@@ -3,6 +3,7 @@ class Round
                 :current_player, :tricks_made, :points, :starting_player
 
     alias :is_trump? :is_trump
+    alias :id :round_number
 
     def initialize(game, round_number, amount_of_cards, is_trump, starting_player)
         @game = game
@@ -149,7 +150,10 @@ class Round
     end
 
     def apply_state(state)
-        @asked_tricks = state["asked_tricks"] if state["asked_tricks"]
+        if state["asked_tricks"] != @asked_tricks
+            @asked_tricks = state["asked_tricks"]
+            @game.broadcaster.broadcast_update_round(self)
+        end
         @tricks_made = state["tricks_made"] if state["tricks_made"]
     end
 
