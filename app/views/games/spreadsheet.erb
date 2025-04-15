@@ -5,7 +5,6 @@
 <%= turbo_stream_from "game_#{@game.id}" %>
 
 
-
 <div class="tables-container">
   <table class="game-table">
     <thead>
@@ -22,16 +21,18 @@
         <tr>
           <%# round number %>
           <td class="<%= round.is_trump? ? 'trump-round' : 'no-trump-round' %>">
-            <div class="tricks-cards-ratio">
-              <%= round.total_tricks_asked %>/<%= round.amount_of_cards %>
-            </div>
+            <turbo-frame>
+              <%= render "rounds/tricks_cards_ratio", round: round %>
+            </turbo-frame>
           </td>
 
           <%# round cell %>
           <% @game.players.each do |player| %>
             <td class="<%= 'starting-player' if round.starting_player == player %>">
               <div class="points-cell" game-id="<%= @game.id %>">
-                <span class="points"><%= round.points[player] || "-" %></span>
+                <turbo-frame id="points-frame-<%= round.round_number %>-<%= player %>">
+                  <%= render "rounds/points_per_player", round: round, player: player %>
+                </turbo-frame>
                 <span class="tricks-superindex">
                   <%# MADE TRICKS%>
                   <span class="editable" 

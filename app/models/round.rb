@@ -34,6 +34,7 @@ class Round
         validate_state!(state)
         apply_state(state)
         calculate_points
+        broadcast_updates
     end
 
     def to_json
@@ -48,6 +49,10 @@ class Round
     end
 
     private
+
+    def broadcast_updates
+        @game.broadcaster.broadcast_update_round(self, @game.players)
+    end
 
     def initialize_tricks_dicts
         @points = {}
@@ -150,9 +155,10 @@ class Round
     end
 
     def apply_state(state)
+        # TODO: implement updating each player's point when the state is updated?
+        # Is this if statement necessary?
         if state["asked_tricks"] != @asked_tricks
             @asked_tricks = state["asked_tricks"]
-            @game.broadcaster.broadcast_update_round(self)
         end
         @tricks_made = state["tricks_made"] if state["tricks_made"]
     end
