@@ -1,0 +1,8 @@
+<tbody id="leaderboard-body">
+  <% game.leaderboard.each do |player, points| %>
+    <tr>
+      <td><%= player %></td>
+      <td><%= points %></td>
+    </tr>    
+  <% end %>
+</tbody>

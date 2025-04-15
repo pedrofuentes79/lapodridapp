@@ -1,7 +1,9 @@
-<script>
+<script id="game-state">
   var gameStarted = <%= @game.started ? 'true' : 'false' %>;
-  var gameState = <%= @game.to_json %>;
+  var gameState = <%= raw @game.to_json %>;
 </script>
+<%= turbo_stream_from "game_#{@game.id}" %>
+
 
 <div class="tables-container">
   <table class="game-table">
@@ -19,21 +21,23 @@
         <tr>
           <%# round number %>
           <td class="<%= round.is_trump? ? 'trump-round' : 'no-trump-round' %>">
-            <div class="tricks-cards-ratio">
-              <%= round.total_tricks_asked %>/<%= round.amount_of_cards %>
-            </div>
+            <turbo-frame>
+              <%= render "rounds/tricks_cards_ratio", round: round %>
+            </turbo-frame>
           </td>
 
           <%# round cell %>
           <% @game.players.each do |player| %>
             <td class="<%= 'starting-player' if round.starting_player == player %>">
               <div class="points-cell" game-id="<%= @game.id %>">
-                <span class="points"><%= round.points[player] || "-" %></span>
+                <turbo-frame id="points-frame-<%= round.round_number %>-<%= player %>">
+                  <%= render "rounds/points_per_player", round: round, player: player %>
+                </turbo-frame>
                 <span class="tricks-superindex">
                   <%# MADE TRICKS%>
                   <span class="editable" 
                         data-player="<%= player %>" 
-                        data-round="<%= index %>" 
+                        data-round="<%= round.round_number %>" 
                         data-action="registerTricks" 
                         data-gameid="<%= @game.id %>"
                         data-editable="<%= round.asked_tricks.values.all? %>">
@@ -43,7 +47,7 @@
                   <%# ASKED TRICKS%>
                   <span class="editable" 
                         data-player="<%= player %>" 
-                        data-round="<%= index %>" 
+                        data-round="<%= round.round_number %>" 
                         data-action="askForTricks" 
                         data-gameid="<%= @game.id %>">
                     <%= round.asked_tricks[player] || "-" %>
@@ -55,9 +59,9 @@
           
           <%# forbidden value cell %>
           <td class="forbidden-value-cell">
-            <div class="forbidden-value">
-              <%= round.last_player_forbidden_value %>
-            </div>
+            <turbo-frame>
+              <%= render "rounds/forbidden_value", round: round %>
+            </turbo-frame>
           </td>
         </tr>
       <% end %>
@@ -74,7 +78,7 @@
       <th>Points</th>
     </tr>
   </thead>
-  <tbody id="leaderboard-body">
-    <!-- Leaderboard data will be inserted here by JavaScript -->
-  </tbody>
-</table>
+  <turbo-frame>
+    <%= render "leaderboard", game: @game %>
+  </turbo-frame>
+</table>    

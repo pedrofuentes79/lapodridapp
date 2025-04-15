@@ -1,16 +1,15 @@
+const GAME_STATE_SELECTOR = '#game-state';
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const editableElements = document.querySelectorAll(".editable"); 
-
-    // Initial leaderboard load
-    const gameId = document.querySelector('.points-cell').getAttribute('game-id');
-    fetchLeaderboard(gameId);
 
     // DBLCLICK ON SPAN TURNS INTO INPUT
     editableElements.forEach((element) => {
       element.addEventListener("dblclick", (event) => {
         const span = event.target;
         const player = span.dataset.player;
-        const round = span.dataset.round;
+        const roundNumber = span.dataset.round;
         const action = span.dataset.action;
         const value = span.innerText;
         const gameId = span.dataset.gameid;
@@ -25,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         input.type = "number";
         input.value = value === "-" ? "" : value;
         input.dataset.player = player;
-        input.dataset.round = round;
+        input.dataset.round = roundNumber;
         input.dataset.action = action;
         input.dataset.gameid = gameId;
         
@@ -46,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
           
           // Update game state
           updateGameState(input, action, player, value, gameId);
-          fetchLeaderboard(gameId);
         };
         
         const handleKeyPress = (event) => {
@@ -66,32 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-function handleInputChange(event) {
-    const input = event.target;
-    const player = input.dataset.player;
-    const gameId = input.dataset.gameid;
-    const action = input.dataset.action;
-    const value = input.value;
-    const span = input.nextSibling;
-
-    // Update the span and remove input
-    span.innerText = value === "" ? "-" : value;
-    span.style.display = "inline";
-    input.remove();
-
-    // Update game state
-    updateGameState(input, action, player, value, gameId);
-    fetchLeaderboard(gameId);
-}
-
 function sendGameState(gameState, gameId) {
   console.log('Sending game id', gameId);
-  return fetch('/api/update_game_state', {
+  return fetch(`/api/games/${gameId}/update_game_state`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ game_state: gameState, game_id: gameId })
+    body: JSON.stringify({ game_state: gameState, id: gameId })
   })
   .then(response => response.json())
   .catch(error => {
@@ -102,8 +82,9 @@ function sendGameState(gameState, gameId) {
 
 function updateGameState(inputElement, action, player, value, gameId) {
   const gameState = gameStateFromDOM();
+  console.log('Game state:', gameState);
   
-  // Get the round number from the input element's data attribute
+  // EDITS GAME STATE WITH VALUES FROM DOM
   const roundNumber = parseInt(inputElement.dataset.round, 10);
   const round = gameState.rounds[roundNumber];
 
@@ -115,7 +96,15 @@ function updateGameState(inputElement, action, player, value, gameId) {
 
   updateTricksInDOM(gameState);
   
-  return sendGameState(gameState, gameId);
+  return sendGameState(gameState, gameId)
+    .then(response => {
+      console.log('Game state updated successfully');
+      return response;
+    })
+    .catch(error => {
+      console.error('Error updating game state:', error);
+      throw error;
+    });
 }
 
 function updateTricksInDOM(gameState) {
@@ -123,7 +112,7 @@ function updateTricksInDOM(gameState) {
   const round = gameState.rounds[roundNumber];
   
   // Update the gameState in the script tag
-  document.querySelector('script').innerText = `var gameState = ${JSON.stringify(gameState)};`;
+  document.querySelector(GAME_STATE_SELECTOR).innerText = `var gameState = ${JSON.stringify(gameState)};`;
 
   // Update data-editable attributes for all rounds
   Object.entries(gameState.rounds).forEach(([index, roundData]) => {
@@ -183,102 +172,23 @@ function allPlayersAsked(round) {
 }
 
 function gameStateFromDOM() {
-  return JSON.parse(document.querySelector('script').innerText.match(/var gameState = (.*);/)[1]);
-}
+  const scriptContent = document.querySelector(GAME_STATE_SELECTOR).innerText;
 
-async function fetchLeaderboard(gameId) {
-  try {
-    console.log('Fetching leaderboard for game:', gameId);
-    const response = await fetch(`/api/leaderboard?game_id=${gameId}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const leaderboard = await response.json();
-    console.log('Received leaderboard data:', leaderboard);
-
-    const leaderboardBody = document.getElementById('leaderboard-body');
-    if (!leaderboardBody) {
-      console.error('Could not find leaderboard-body element');
-      return;
-    }
-    
-    leaderboardBody.innerHTML = '';
-
-    if (Object.keys(leaderboard).length === 0) {
-      console.log('Leaderboard is empty');
-      const row = document.createElement('tr');
-      const cell = document.createElement('td');
-      cell.colSpan = 2;
-      cell.textContent = 'No scores yet';
-      row.appendChild(cell);
-      leaderboardBody.appendChild(row);
-      return;
-    }
-
-    // Sort leaderboard by points in descending order
-    const sortedLeaderboard = Object.entries(leaderboard)
-      .sort(([,a], [,b]) => b - a);
-
-    sortedLeaderboard.forEach(([player, points], index) => {
-      const row = document.createElement('tr');
-      const playerCell = document.createElement('td');
-      const pointsCell = document.createElement('td');
-
-      playerCell.textContent = player;
-      pointsCell.textContent = points;
-
-      // Highlight the leader
-      if (index === 0) {
-        row.classList.add('leader');
-      }
-
-      row.appendChild(playerCell);
-      row.appendChild(pointsCell);
-      leaderboardBody.appendChild(row);
-    });
-  } catch (error) {
-    console.error('Failed to fetch leaderboard:', error);
-    const leaderboardBody = document.getElementById('leaderboard-body');
-    if (leaderboardBody) {
-      leaderboardBody.innerHTML = '<tr><td colspan="2">Error loading leaderboard</td></tr>';
-    }
+  const match = scriptContent.match(/var gameState = (.*);/);
+  if (!match || match.length < 2) {
+    throw new Error('Game state not found in script tag');
   }
-}
 
-async function refreshGameData(gameId) {
-  try {
-    // Fetch the updated game HTML from the server
-    const response = await fetch(`/game/${gameId}`);
-    const html = await response.text();
-    
-    // Create a temporary container to parse the HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Update the game table
-    const newGameTable = doc.querySelector('.game-table');
-    const currentGameTable = document.querySelector('.game-table');
-    if (newGameTable && currentGameTable) {
-      currentGameTable.innerHTML = newGameTable.innerHTML;
-    }
-    
-    // Update the game state in the script tag
-    const newGameState = doc.querySelector('script');
-    if (newGameState) {
-      document.querySelector('script').innerHTML = newGameState.innerHTML;
-    }
-    
-    // Fetch and update leaderboard
-    await fetchLeaderboard(gameId);
-    
-    // Reattach event listeners to new elements
-    attachEventListeners();
-    
-  } catch (error) {
-    console.error('Failed to refresh game data:', error);
-  }
+  // Decode HTML entities
+  const decodedGameState = match[1]
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&apos;/g, "'");
+
+  console.log('Game state:', decodedGameState);
+  return JSON.parse(decodedGameState);
 }
 
 function attachEventListeners() {
@@ -326,7 +236,6 @@ function attachEventListeners() {
         
         // Update game state and refresh all data
         await updateGameState(input, action, player, value, gameId);
-        await refreshGameData(gameId);
       };
       
       const handleKeyPress = (event) => {
@@ -345,28 +254,3 @@ function attachEventListeners() {
     });
   });
 }
-
-async function handleInputChange(event) {
-    const input = event.target;
-    const player = input.dataset.player;
-    const gameId = input.dataset.gameid;
-    const action = input.dataset.action;
-    const value = input.value;
-    const span = input.nextSibling;
-
-    span.innerText = value === "" ? "-" : value;
-    span.style.display = "inline";
-    input.remove();
-
-    await updateGameState(input, action, player, value, gameId);
-    await refreshGameData(gameId);
-}
-
-// Add initial event listener attachment when the page loads
-document.addEventListener("DOMContentLoaded", () => {
-    attachEventListeners();
-    
-    // Initial leaderboard load
-    const gameId = document.querySelector('.points-cell').getAttribute('game-id');
-    fetchLeaderboard(gameId);
-});

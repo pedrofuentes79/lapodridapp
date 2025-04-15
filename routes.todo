@@ -1,0 +1,13 @@
+# Games routes
+# uses get, post, put, delete
+
+games/new => GET
+games/create => POST
+
+games/:id => GET
+games/:id => PUT
+games/:id => DELETE
+
+games/:id/leaderboard => GET
+
+

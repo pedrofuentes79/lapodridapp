@@ -3,6 +3,7 @@ class Round
                 :current_player, :tricks_made, :points, :starting_player
 
     alias :is_trump? :is_trump
+    alias :id :round_number
 
     def initialize(game, round_number, amount_of_cards, is_trump, starting_player)
         @game = game
@@ -28,39 +29,18 @@ class Round
         @amount_of_cards - total_tricks_asked
     end
 
-    def ask_for_tricks(player, tricks_asked_by_player)
-        validate_player_turn!(player)
-        validate_asked_tricks_amount!(player, tricks_asked_by_player)
-
-        @asked_tricks[player] = tricks_asked_by_player
-        advance_turn
-    end
-
-    def register_tricks(player, tricks_made_by_player)
-        validate_all_players_have_asked_for_tricks!
-        validate_tricks_made_amount!(player, tricks_made_by_player)
-
-        @tricks_made[player] = tricks_made_by_player
-
-        if all_players_registered_tricks?
-          calculate_points
-          @game.next_round
-        else
-          advance_turn
-        end
-    end
 
     def update_state(state)
         validate_state!(state)
         apply_state(state)
-        calculate_points if state["tricks_made"].values.all?
+        calculate_points
+        broadcast_updates
     end
 
     def to_json
         {
             round_number: @round_number,
             amount_of_cards: @amount_of_cards,
-            current_player: @current_player,
             asked_tricks: @asked_tricks,
             tricks_made: @tricks_made,
             points: @points,
@@ -70,6 +50,10 @@ class Round
 
     private
 
+    def broadcast_updates
+        @game.broadcaster.broadcast_update_round(self, @game.players)
+    end
+
     def initialize_tricks_dicts
         @points = {}
         @asked_tricks = {}
@@ -78,26 +62,24 @@ class Round
         @game.players.each do |player|
             @asked_tricks[player] = nil
             @tricks_made[player] = nil
+            @points[player] = 0
         end
     end
 
     def calculate_points
-        @game.players.each do |player|
-            @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
+        if @tricks_made.values.all? and @asked_tricks.values.all?
+            @game.players.each do |player|
+                @points[player] = @game.calculate_points(@asked_tricks[player], @tricks_made[player])
+            end
         end
     end
 
-    def advance_turn
-        current_index = @game.players.index(@current_player)
-        @current_player = @game.players[(current_index + 1) % @game.players.length]
-    end
-
-    def all_players_registered_tricks?
-        @tricks_made.values.all?
-    end
-
     def last_player
-        @game.next_player_to(@current_player, -1)
+        @game.players.last_player(@starting_player)
+    end
+
+    def is_last_player?(player)
+        @game.players.is_last_player?(player, @starting_player)
     end
 
     def remaining_player_to_ask_for_tricks
@@ -108,18 +90,9 @@ class Round
         @asked_tricks.values.compact.length == @game.players.length - 1
     end
 
-    def is_last_player?(player)
-        starting_player_index = @game.players.index(@starting_player)
-        last_player_index = (starting_player_index - 1) % @game.players.length
-        player == @game.players[last_player_index]
-    end
-
     # Validations
-    def validate_player_turn!(player)
-        raise ArgumentError, "Wrong player turn. Expected #{@current_player}, got #{player}" unless player == @current_player
-    end
-
-    # is this allowed in ruby?
+    # TODO: dont raise an error, save the error in @game.errors and save the invalid state
+    # this is so that a user can fix the asked/made tricks one by one :D
     def validate_asked_tricks_amount!(player, tricks_asked_by_player, tricks_asked_for_until_this_player = nil)
         if tricks_asked_for_until_this_player.nil?
             tricks_asked_for_until_this_player = sum_until_player({ "asked_tricks" => @asked_tricks }, player, "asked_tricks")
@@ -133,14 +106,6 @@ class Round
 
         if is_last_player?(player) && tricks_asked_for_until_this_player + tricks_asked_by_player == @amount_of_cards
             raise ArgumentError, "Last player cannot ask for tricks if total sum equals amount of cards per round"
-        end
-    end
-
-    def tricks_made_sum
-        if @tricks_made.values.any?
-            @tricks_made.values.compact.sum
-        else
-            0
         end
     end
 
@@ -159,20 +124,43 @@ class Round
         end
     end
 
-    def validate_all_players_have_asked_for_tricks!
-        raise ArgumentError, "Not all players have asked for tricks" unless @asked_tricks.values.all?
+    def validate_all_players_have_asked_for_tricks!(state)
+        if (not state["asked_tricks"]) or (not state["asked_tricks"].values.all?)
+            raise ArgumentError, "Not all players have asked for tricks"
+        end
     end
 
+    # TODO: when receiving update_state, parse and convert it to an object, called RoundState :D
     def validate_state!(state)
-        @game.players.each do |player|
-            validate_asked_tricks_amount!(player, state["asked_tricks"][player], sum_until_player(state, player, "asked_tricks"))
-            validate_tricks_made_amount!(player, state["tricks_made"][player], sum_until_player(state, player, "tricks_made"))
+        validate_asked_tricks!(state)
+        validate_tricks_made!(state)
+    end
+
+    def validate_asked_tricks!(state)
+        return unless state["asked_tricks"]
+
+        state["asked_tricks"].each do |player, tricks_asked|
+            validate_asked_tricks_amount!(player, tricks_asked, sum_until_player(state, player, "asked_tricks"))
+        end
+    end
+
+    def validate_tricks_made!(state)
+        if state["tricks_made"] and state["tricks_made"].values.any?
+            validate_all_players_have_asked_for_tricks!(state)
+
+            state["tricks_made"].each do |player, tricks_made|
+                validate_tricks_made_amount!(player, tricks_made, sum_until_player(state, player, "tricks_made"))
+            end
         end
     end
 
     def apply_state(state)
-        @asked_tricks = state["asked_tricks"]
-        @tricks_made = state["tricks_made"]
+        # TODO: implement updating each player's point when the state is updated?
+        # Is this if statement necessary?
+        if state["asked_tricks"] != @asked_tricks
+            @asked_tricks = state["asked_tricks"]
+        end
+        @tricks_made = state["tricks_made"] if state["tricks_made"]
     end
 
     def sum_until_player(state, player, key)
@@ -217,7 +205,6 @@ class NullRound
         {
             round_number: @round_number,
             amount_of_cards: 0,
-            current_player: "",
             asked_tricks: {},
             tricks_made: {},
             points: {},
