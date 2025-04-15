@@ -40,5 +40,4 @@ class GameBroadcaster
     def broadcast_update_game
         broadcast_update_leaderboard
     end
-
 end
