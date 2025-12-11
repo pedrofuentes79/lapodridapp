@@ -1,0 +1,10 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  game_id: "GAME001"
+
+two:
+  game_id: "GAME002"
+
+active_game:
+  game_id: "ACTIVE123"

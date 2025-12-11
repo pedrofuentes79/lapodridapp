@@ -1,0 +1,19 @@
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/erb-6.0.0/ext/erb/escape
+/usr/bin/ruby extconf.rb
+checking for rb_ext_ractor_safe() in ruby.h... yes
+creating Makefile
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/erb-6.0.0/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-fcs9cq sitelibdir\=./.gem.20251210-15356-fcs9cq clean
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/erb-6.0.0/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-fcs9cq sitelibdir\=./.gem.20251210-15356-fcs9cq
+compiling escape.c
+linking shared-object erb/escape.so
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/erb-6.0.0/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-fcs9cq sitelibdir\=./.gem.20251210-15356-fcs9cq install
+/usr/bin/install -c -m 0755 escape.so ./.gem.20251210-15356-fcs9cq/erb
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/erb-6.0.0/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-fcs9cq sitelibdir\=./.gem.20251210-15356-fcs9cq clean
