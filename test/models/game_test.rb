@@ -52,8 +52,8 @@ class GameTest < ActiveSupport::TestCase
     game.ask_for_tricks(round1, bob, 3)
     game.make_tricks(round1, alice, 3)
 
-    assert !round1.complete?
-    assert !game.is_previous_round_complete?(round2)
+    assert !round1.all_players_made_tricks?
+    assert !game.all_players_made_tricks_in_previous_round?(round2)
 
     error = assert_raises(RuntimeError) do
       game.ask_for_tricks(round2, alice, 2)
@@ -64,6 +64,31 @@ class GameTest < ActiveSupport::TestCase
       game.make_tricks(round2, alice, 2)
     end
     assert_equal "Previous round hasn't been completed yet", error.message
+  end
+
+  test "should allow an invalid round state" do
+    game = Game.create
+    alice = Player.create(name: "Alice")
+    bob = Player.create(name: "Bob")
+    game.game_participations.create(player: alice, position: 1)
+    game.game_participations.create(player: bob, position: 2)
+
+    round1 = game.rounds.create(cards_dealt: 7, round_number: 0)
+
+    # Valid state
+    game.ask_for_tricks(round1, alice, 2)
+    game.ask_for_tricks(round1, bob, 3)
+    game.make_tricks(round1, alice, 3)
+    game.make_tricks(round1, bob, 4)
+
+
+    assert_nothing_raised do
+      game.make_tricks(round1, alice, 2)
+      # now we have an invalid state
+      assert_not round1.valid_state?
+      # now we correct the state adding to bob the trick we removed from alice
+      game.make_tricks(round1, bob, 5)
+    end
   end
 
 end

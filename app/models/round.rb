@@ -41,7 +41,7 @@ class Round < ApplicationRecord
     validate_player_has_asked_for_tricks!(player, bid)
     validate_tricks_within_cards_dealt!(player, number_of_tricks)
     validate_last_player_tricks!(player, number_of_tricks) if is_last_player_to_make_tricks(player)
-    validate_overwrite_maintains_total!(player, bid, number_of_tricks) if complete?
+    # validate_overwrite_maintains_total!(player, bid, number_of_tricks) if all_players_made_tricks?
 
     bid.update(actual_tricks: number_of_tricks)
   end
@@ -60,8 +60,12 @@ class Round < ApplicationRecord
     bids.find_by(player: player)
   end
 
-  def complete?
+  def all_players_made_tricks?
     bids.where(actual_tricks: nil).count == 0
+  end
+
+  def valid_state?
+    all_players_made_tricks? and total_made_tricks == cards_dealt and total_asked_tricks != cards_dealt
   end
 
   private
@@ -93,7 +97,6 @@ class Round < ApplicationRecord
       raise "Player #{player.name} can only make #{cards_dealt - total_made_tricks + old_tricks} tricks"
     end
   end
-
 
   def validate_overwrite_maintains_total_asked_tricks!(player, bid, number_of_tricks)
     old_tricks = bid.predicted_tricks
