@@ -40,7 +40,9 @@ class Round < ApplicationRecord
 
     validate_player_has_asked_for_tricks!(player, bid)
     validate_tricks_within_cards_dealt!(player, number_of_tricks)
-    validate_last_player_tricks!(player, number_of_tricks) if is_last_player_to_make_tricks(player)
+    # validate_last_player_tricks!(player, number_of_tricks) if is_last_player_to_make_tricks(player)
+
+    # this is not needed anymore, because we're allowing an invalid state to be created and corrected later
     # validate_overwrite_maintains_total!(player, bid, number_of_tricks) if all_players_made_tricks?
 
     bid.update(actual_tricks: number_of_tricks)

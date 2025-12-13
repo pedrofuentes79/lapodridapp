@@ -50,17 +50,17 @@ class GameTest < ActiveSupport::TestCase
     @game.make_tricks(round1, @alice, 3)
 
     assert !round1.all_players_made_tricks?
-    assert !@game.all_players_made_tricks_in_previous_round?(round2)
+    assert !@game.all_players_made_tricks_in_previous_rounds?(round2)
 
     error = assert_raises(RuntimeError) do
       @game.ask_for_tricks(round2, @alice, 2)
     end
-    assert_equal "Previous round hasn't been completed yet", error.message
+    assert_equal "The previous round is invalid. You need to correct it to move on to the next round", error.message
 
     error = assert_raises(RuntimeError) do
       @game.make_tricks(round2, @alice, 2)
     end
-    assert_equal "Previous round hasn't been completed yet", error.message
+    assert_equal "The previous round is invalid. You need to correct it to move on to the next round", error.message
   end
 
   test "should allow an invalid round state" do
@@ -82,6 +82,51 @@ class GameTest < ActiveSupport::TestCase
       assert_not round1.valid_state?
       # now we correct the state adding to bob the trick we removed from alice
       @game.make_tricks(round1, @bob, 5)
+    end
+  end
+
+  test "should not allow moving on to the next round if the current round is invalid" do
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    round1 = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round2 = @game.rounds.create(cards_dealt: 6, round_number: 1)
+
+    @game.ask_for_tricks(round1, @alice, 2)
+    @game.ask_for_tricks(round1, @bob, 3)
+    @game.make_tricks(round1, @alice, 3)
+
+    assert_nothing_raised do
+      # bob makes 3 tricks. Sum is 6, so round1 is invalid.
+      # This does not raise because we're allowing invalid states (for them to be corrected later)
+      @game.make_tricks(round1, @bob, 3)
+    end
+
+    assert_not round1.valid_state?
+
+
+    # --- TRY TO MOVE ON TO THE NEXT ROUND ---
+    error = assert_raises(RuntimeError) do
+      @game.ask_for_tricks(round2, @alice, 2)
+    end
+    assert_equal "The previous round is invalid. You need to correct it to move on to the next round", error.message
+
+    error = assert_raises(RuntimeError) do
+      @game.make_tricks(round2, @alice, 2)
+    end
+    assert_equal "The previous round is invalid. You need to correct it to move on to the next round", error.message
+
+    # ------------------------------------------
+
+    # --- CORRECT THE STATE ---
+    # Now we correct the state by making alice make 4 tricks
+    @game.make_tricks(round1, @alice, 4)
+    assert round1.valid_state?
+
+    # ------------------------------------------
+    # And we can move on to the next round
+    assert_nothing_raised do
+      @game.ask_for_tricks(round2, @alice, 2)
     end
   end
 end

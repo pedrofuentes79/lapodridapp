@@ -1,3 +1,4 @@
+# TODO: add a method to create a round and automatically set the round_number
 class Game < ApplicationRecord
   has_many :game_participations
   has_many :players, through: :game_participations
@@ -9,20 +10,22 @@ class Game < ApplicationRecord
   # because we want users to be able to rewrite the previous state if needed in case of an error.
   def ask_for_tricks(round, player, number_of_tricks)
     # is the previous round complete?
-    raise "Previous round hasn't been completed yet" unless all_players_made_tricks_in_previous_round?(round)
+    # raise "Previous round hasn't been completed yet" unless all_players_made_tricks_in_previous_rounds?(round)
+    validate_all_previous_rounds_are_valid?(round)
 
     round.player_asks_for_tricks(player, number_of_tricks)
   end
 
   def make_tricks(round, player, number_of_tricks)
     # is the previous round complete?
-    raise "Previous round hasn't been completed yet" unless all_players_made_tricks_in_previous_round?(round)
+    # raise "Previous round hasn't been completed yet" unless all_players_made_tricks_in_previous_rounds?(round)
+    validate_all_previous_rounds_are_valid?(round)
 
     round.player_makes_tricks(player, number_of_tricks)
   end
 
 
-  def all_players_made_tricks_in_previous_round?(round)
+  def all_players_made_tricks_in_previous_rounds?(round)
     prev = previous_round(round.round_number)
     prev.nil? || prev.all_players_made_tricks?
   end
@@ -34,5 +37,14 @@ class Game < ApplicationRecord
 
   def current_round
     rounds.find_by(round_number: current_round_number)
+  end
+
+  private
+
+  def validate_all_previous_rounds_are_valid?(round)
+    previous_rounds = rounds.where(round_number: (0..round.round_number - 1))
+    previous_rounds.each do |round|
+      raise "The previous round is invalid. You need to correct it to move on to the next round" unless round.valid_state?
+    end
   end
 end

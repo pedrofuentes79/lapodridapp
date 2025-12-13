@@ -79,16 +79,19 @@ class RoundTest < ActiveSupport::TestCase
     end
   end
 
-  test "should raise if the last player to make tricks doesn't make the total number of tricks" do
+  test "should not raise if the last player to make tricks doesn't make the total number of tricks" do
     round = @game.rounds.create(cards_dealt: 7, round_number: 0)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
     @game.make_tricks(round, @player1, 2)
     @game.make_tricks(round, @player2, 3)
-    _ = assert_raises(RuntimeError) do
+
+    # THIS IS BECAUSE WE'RE ALLOWING AN INVALID STATE TO BE CREATED AND CORRECTED LATER
+    assert_nothing_raised do
       @game.make_tricks(round, @player3, 3)
     end
+    assert_not round.valid_state?
   end
 
   test "should allow player to overwrite the tricks they asked for" do
