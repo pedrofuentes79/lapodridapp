@@ -1,4 +1,7 @@
 # TODO: add a method to create a round and automatically set the round_number
+# TODO: maybe create a GameRoundManager to handle creating the next round, the current round number
+# and the passing to the next round... idk maybe it's okay to have it here...
+
 class Game < ApplicationRecord
   has_many :game_participations, dependent: :destroy
   has_many :players, through: :game_participations
@@ -6,14 +9,12 @@ class Game < ApplicationRecord
 
   validates :current_round_number, numericality: { greater_than_or_equal_to: 0 }
 
-
   # -------------------------------- GAME BUSINESS LOGIC --------------------------------
 
   # NOTE: in these two methods, we don't validate that the current round is the one we're asking for
   # because we want users to be able to rewrite the previous state if needed in case of an error.
   def ask_for_tricks(round, player, number_of_tricks)
     # is the previous round complete?
-    # raise "Previous round hasn't been completed yet" unless all_players_made_tricks_in_previous_rounds?(round)
     validate_all_previous_rounds_are_valid?(round)
 
     round.player_asks_for_tricks(player, number_of_tricks)
@@ -21,7 +22,6 @@ class Game < ApplicationRecord
 
   def make_tricks(round, player, number_of_tricks)
     # is the previous round complete?
-    # raise "Previous round hasn't been completed yet" unless all_players_made_tricks_in_previous_rounds?(round)
     validate_all_previous_rounds_are_valid?(round)
 
     round.player_makes_tricks(player, number_of_tricks)
@@ -61,11 +61,6 @@ class Game < ApplicationRecord
 
   def current_round
     rounds.find_by(round_number: current_round_number)
-  end
-
-  def all_players_made_tricks_in_previous_rounds?(round)
-    prev = previous_round(round.round_number)
-    prev.nil? || prev.all_players_made_tricks?
   end
 
   def maximum_cards_dealt_for_players(player_count, has_trump: true)
