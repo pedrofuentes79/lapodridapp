@@ -52,6 +52,14 @@ class Game < ApplicationRecord
     prev.nil? || prev.all_players_made_tricks?
   end
 
+  def maximum_cards_dealt_for_players(player_count, has_trump: true)
+    # 51 is the number of cards in the deck after having one for the `trump`.
+    # If the round doesn't have trump, there is one more card available
+    total_available_cards = has_trump ? 51 : 52
+    return 0 if player_count.zero?
+    (total_available_cards / player_count).floor
+  end
+
   # -------------------------------- VALIDATIONS --------------------------------
 
   def validate_round_number_sequential(round_number, exclude_round_id: nil)

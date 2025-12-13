@@ -70,7 +70,7 @@ class Round < ApplicationRecord
   def maximum_cards_dealt
     # 51 is the number of cards in the deck after having one for the `trump`.
     # If the round doesn't have trump, there is one more card available
-    total_available_cards = has_trump? ? 52 : 51
+    total_available_cards = has_trump? ? 51 : 52
     (total_available_cards / game.players.count).floor
   end
 
@@ -131,5 +131,4 @@ class Round < ApplicationRecord
     raise "Game must have players before creating rounds" if game.players.count == 0
     raise "Invalid number of cards dealt" if cards_dealt > maximum_cards_dealt
   end
-
 end
