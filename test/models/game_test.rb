@@ -1,5 +1,6 @@
 require "test_helper"
 
+# TODO: add tests that show THE REASON why the state is invalid for any given round
 class GameTest < ActiveSupport::TestCase
   def setup
     @game = Game.create
@@ -128,5 +129,56 @@ class GameTest < ActiveSupport::TestCase
     assert_nothing_raised do
       @game.ask_for_tricks(round2, @alice, 2)
     end
+  end
+
+  # ----- TESTS FOR CREATING THE NEXT ROUND -----
+  test "should create next rounds correctly" do
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    round1 = @game.create_next_round(7)
+    round2 = @game.create_next_round(6)
+
+    assert_equal 2, @game.rounds.count
+    assert_includes @game.rounds, round1
+    assert_includes @game.rounds, round2
+
+    assert_equal 0, round1.round_number
+    assert_equal 1, round2.round_number
+  end
+
+  test "should raise if trying to create a round with a non-sequential round number" do
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    _ = @game.create_next_round(7)
+
+    # manually create a round with a bigger number
+    error = assert_raises(RuntimeError) do
+      @game.rounds.create(cards_dealt: 6, round_number: 2)
+    end
+    assert_equal "The round numbers are not sequential", error.message
+  end
+
+  test "should raise if trying to create a round when there are gaps in existing rounds" do
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    # Create round 0
+    _ = @game.create_next_round(7)
+
+    # Try to create round 2 directly (skipping round 1) - should fail validation
+    round2 = Round.new(game: @game, cards_dealt: 6, round_number: 2)
+    assert_not round2.valid?
+    assert_includes round2.errors[:round_number], "must be sequential. Expected 1, got 2"
+
+    # Create round 1 first, then use update_column to change it to round 2 (bypassing validations)
+    round1 = @game.create_next_round(6)
+    round1.update_column(:round_number, 2) # Create gap by changing round_number to 2
+
+    # Now try to create round 3 - should fail because round 1 is missing
+    round3 = Round.new(game: @game, cards_dealt: 5, round_number: 3)
+    assert_not round3.valid?
+    assert_includes round3.errors[:round_number], "is not sequential - there are gaps in existing rounds"
   end
 end

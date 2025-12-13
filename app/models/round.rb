@@ -2,6 +2,8 @@ class Round < ApplicationRecord
   belongs_to :game
   has_many :bids, dependent: :destroy
 
+  validate :round_number_is_sequential
+
   after_create :create_bids_for_players
 
   def forbidden_number
@@ -37,14 +39,8 @@ class Round < ApplicationRecord
   # this method allows the player to rewrite its previous `actual_tricks`
   def player_makes_tricks(player, number_of_tricks)
     bid = bid_for(player)
-
     validate_player_has_asked_for_tricks!(player, bid)
     validate_tricks_within_cards_dealt!(player, number_of_tricks)
-    # validate_last_player_tricks!(player, number_of_tricks) if is_last_player_to_make_tricks(player)
-
-    # this is not needed anymore, because we're allowing an invalid state to be created and corrected later
-    # validate_overwrite_maintains_total!(player, bid, number_of_tricks) if all_players_made_tricks?
-
     bid.update(actual_tricks: number_of_tricks)
   end
 
@@ -71,6 +67,15 @@ class Round < ApplicationRecord
   end
 
   private
+
+  def round_number_is_sequential
+    return unless game.present? && round_number.present?
+
+    errors_array = game.validate_round_number_sequential(round_number, exclude_round_id: id)
+    errors_array.each do |error_message|
+      errors.add(:round_number, error_message)
+    end
+  end
 
   def validate_player_has_asked_for_tricks!(player, bid)
     raise "Player #{player.name} hasn't asked for tricks yet" if bid.predicted_tricks.nil?
