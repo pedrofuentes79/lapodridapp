@@ -6,6 +6,8 @@ class GameTest < ActiveSupport::TestCase
     @game = Game.create
     @alice = Player.create(name: "Alice")
     @bob = Player.create(name: "Bob")
+    @charlie = Player.create(name: "Charlie")
+    @david = Player.create(name: "David")
   end
 
   test "should create a game" do
@@ -22,8 +24,11 @@ class GameTest < ActiveSupport::TestCase
   end
 
   test "should have many rounds" do
-    round1 = @game.rounds.create(cards_dealt: 7, round_number: 1)
-    round2 = @game.rounds.create(cards_dealt: 6, round_number: 2)
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    round1 = @game.create_next_round(7)
+    round2 = @game.create_next_round(6)
 
     assert_equal 2, @game.rounds.count
     assert_includes @game.rounds, round1
@@ -31,7 +36,10 @@ class GameTest < ActiveSupport::TestCase
   end
 
   test "should destroy associated rounds when game is destroyed" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    round = @game.create_next_round(7)
     round_id = round.id
 
     @game.destroy
@@ -180,5 +188,41 @@ class GameTest < ActiveSupport::TestCase
     round3 = Round.new(game: @game, cards_dealt: 5, round_number: 3)
     assert_not round3.valid?
     assert_includes round3.errors[:round_number], "is not sequential - there are gaps in existing rounds"
+  end
+
+  # ----- TESTS FOR THE MAXIMUM NUMBER OF CARDS DEALT -----
+  test "should know the maximum number of cards dealt for a game" do
+    game1 = Game.create
+    game1.game_participations.create(player: @alice, position: 1)
+    game1.game_participations.create(player: @bob, position: 2)
+    game1.game_participations.create(player: @charlie, position: 3)
+    game1.game_participations.create(player: @david, position: 4)
+
+    assert_equal 4, game1.players.count
+
+    # this should not raise. 52 / 4 = 13
+    assert_nothing_raised do
+      game1.create_next_round(13, has_trump: true)
+    end
+
+    # this should raise. 51 / 4 < 13
+    assert_raises(RuntimeError) do
+      game1.create_next_round(13, has_trump: false)
+    end
+
+    # this is ok; 51 / 4 > 12
+    assert_nothing_raised do
+      game1.create_next_round(12, has_trump: false)
+    end
+
+    assert_equal 13, game1.rounds.first.maximum_cards_dealt
+    assert_equal 12, game1.rounds.second.maximum_cards_dealt
+
+    # game2 = Game.create
+    # game2.game_participations.create(player: @alice, position: 1)
+    # game2.game_participations.create(player: @bob, position: 2)
+    # game2.game_participations.create(player: @charlie, position: 3)
+    # game2.game_participations.create(player: @david, position: 4)
+    # game2.game_participations.create(player: @emma, position: 5)
   end
 end

@@ -36,7 +36,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_220849) do
   create_table "games", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "current_round_number", default: 0
+    t.datetime "ended_at"
     t.string "game_id"
+    t.datetime "started_at"
     t.datetime "updated_at", null: false
   end
 
@@ -50,6 +52,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_220849) do
     t.integer "cards_dealt"
     t.datetime "created_at", null: false
     t.integer "game_id", null: false
+    t.boolean "has_trump", default: false
     t.integer "round_number"
     t.datetime "updated_at", null: false
     t.index ["game_id"], name: "index_rounds_on_game_id"

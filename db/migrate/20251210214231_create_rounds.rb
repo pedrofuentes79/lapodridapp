@@ -4,6 +4,7 @@ class CreateRounds < ActiveRecord::Migration[8.1]
       t.references :game, null: false, foreign_key: true
       t.integer :round_number
       t.integer :cards_dealt
+      t.boolean :has_trump, default: false
 
       t.timestamps
     end

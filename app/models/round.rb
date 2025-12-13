@@ -3,6 +3,7 @@ class Round < ApplicationRecord
   has_many :bids, dependent: :destroy
 
   validate :round_number_is_sequential
+  validate :validate_cards_dealt_respects_french_deck
 
   after_create :create_bids_for_players
 
@@ -66,6 +67,13 @@ class Round < ApplicationRecord
     all_players_made_tricks? and total_made_tricks == cards_dealt and total_asked_tricks != cards_dealt
   end
 
+  def maximum_cards_dealt
+    # 51 is the number of cards in the deck after having one for the `trump`.
+    # If the round doesn't have trump, there is one more card available
+    total_available_cards = has_trump? ? 52 : 51
+    (total_available_cards / game.players.count).floor
+  end
+
   private
 
   def round_number_is_sequential
@@ -118,4 +126,10 @@ class Round < ApplicationRecord
       bids.create(player: player)
     end
   end
+
+  def validate_cards_dealt_respects_french_deck
+    raise "Game must have players before creating rounds" if game.players.count == 0
+    raise "Invalid number of cards dealt" if cards_dealt > maximum_cards_dealt
+  end
+
 end

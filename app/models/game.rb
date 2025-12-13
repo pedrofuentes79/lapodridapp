@@ -1,6 +1,6 @@
 # TODO: add a method to create a round and automatically set the round_number
 class Game < ApplicationRecord
-  has_many :game_participations
+  has_many :game_participations, dependent: :destroy
   has_many :players, through: :game_participations
   has_many :rounds, dependent: :destroy, before_add: :validate_sequential_round_number
 
@@ -27,13 +27,13 @@ class Game < ApplicationRecord
     round.player_makes_tricks(player, number_of_tricks)
   end
 
-  def create_next_round(cards_dealt)
+  def create_next_round(cards_dealt, has_trump: true)
     assert_sequential_incremental_round_numbers
 
     biggest_round_number = rounds.maximum(:round_number)
     new_round_number = biggest_round_number.present? ? biggest_round_number + 1 : 0
 
-    rounds.create(cards_dealt: cards_dealt, round_number: new_round_number)
+    rounds.create(cards_dealt: cards_dealt, round_number: new_round_number, has_trump: has_trump)
   end
 
   # -------------------------------- HELPERS --------------------------------
