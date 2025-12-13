@@ -36,11 +36,27 @@ class Game < ApplicationRecord
     rounds.create(cards_dealt: cards_dealt, round_number: new_round_number, has_trump: has_trump)
   end
 
+  def winner
+    return nil unless all_rounds_over?
+
+    rounds.includes(bids: :player)                        # eager load bids and players
+          .flat_map(&:bids)                               # flatten the bids into a single array
+          .group_by(&:player)
+          .transform_values { |bids| bids.sum(&:points) }
+          .max_by { |player, points| points }             # find the player with the highest points
+          &.first                                         # return that player
+  end
+
+
   # -------------------------------- HELPERS --------------------------------
 
   def previous_round(round_number)
     return nil unless round_number >= 1
     rounds.find_by(round_number: round_number - 1)
+  end
+
+  def all_rounds_over?
+    rounds.all? { |round| round.valid_state? }
   end
 
   def current_round

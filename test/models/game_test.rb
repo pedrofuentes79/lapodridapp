@@ -202,27 +202,49 @@ class GameTest < ActiveSupport::TestCase
 
     # this should not raise. 52 / 4 = 13
     assert_nothing_raised do
-      game1.create_next_round(13, has_trump: true)
+      game1.create_next_round(13, has_trump: false)
     end
 
     # this should raise. 51 / 4 < 13
     assert_raises(RuntimeError) do
-      game1.create_next_round(13, has_trump: false)
+      game1.create_next_round(13, has_trump: true)
     end
 
     # this is ok; 51 / 4 > 12
     assert_nothing_raised do
-      game1.create_next_round(12, has_trump: false)
+      game1.create_next_round(12, has_trump: true)
     end
 
     assert_equal 13, game1.rounds.first.maximum_cards_dealt
     assert_equal 12, game1.rounds.second.maximum_cards_dealt
-
-    # game2 = Game.create
-    # game2.game_participations.create(player: @alice, position: 1)
-    # game2.game_participations.create(player: @bob, position: 2)
-    # game2.game_participations.create(player: @charlie, position: 3)
-    # game2.game_participations.create(player: @david, position: 4)
-    # game2.game_participations.create(player: @emma, position: 5)
   end
+
+
+  # ----- TESTS FOR WINNER CALCULATION -----
+  test "should calculate the winner of a game" do
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    round1 = @game.create_next_round(7)
+    round2 = @game.create_next_round(6)
+
+    @game.ask_for_tricks(round1, @alice, 2)
+    @game.ask_for_tricks(round1, @bob, 4)
+    @game.make_tricks(round1, @alice, 2)
+    @game.make_tricks(round1, @bob, 5)
+
+    assert_not @game.all_rounds_over?
+    assert_nil @game.winner # since game not over yet!
+
+    @game.ask_for_tricks(round2, @alice, 2)
+    @game.ask_for_tricks(round2, @bob, 5)
+    @game.make_tricks(round2, @alice, 2)
+    @game.make_tricks(round2, @bob, 4)
+
+    assert_equal @alice, @game.winner
+    assert @game.all_rounds_over?
+  end
+
+  # TODO: leaderboard tests...
+
 end
