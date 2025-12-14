@@ -8,6 +8,7 @@ class Round < ApplicationRecord
 
   validate :round_number_is_sequential
   validate :validate_cards_dealt_respects_french_deck
+  validates :round_number, numericality: { greater_than_or_equal_to: 1 }
 
   after_create :create_bids_for_players
 

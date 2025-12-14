@@ -12,20 +12,20 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should belong to a game" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
-    
+    round = @game.create_next_round(7)
+
     assert_equal @game, round.game
   end
 
   test "should create empty bids for each player" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round = @game.create_next_round(7)
     
     assert_equal @game.players.count, round.bids.count
     assert_equal @game.players.pluck(:id), round.bids.pluck(:player_id)
   end
 
   test "should know forbidden number only when one player doesn't have a bid" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round = @game.create_next_round(7)
     assert_nil round.forbidden_number
 
     round.player_asks_for_tricks(@player1, 2)
@@ -39,7 +39,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should know total points for a player" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round = @game.create_next_round(7)
     round.player_asks_for_tricks(@player1, 5)
     round.player_asks_for_tricks(@player2, 3)
     round.player_asks_for_tricks(@player3, 2)
@@ -52,7 +52,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should raise error if player asks for more tricks than the number of cards dealt" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round = @game.create_next_round(7)
     error = assert_raises(RuntimeError) do
       round.player_asks_for_tricks(@player1, 8)
     end
@@ -60,7 +60,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should raise error if player asks for the forbidden number of tricks" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     error = assert_raises(RuntimeError) do
@@ -70,7 +70,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow player to ask for forbidden_number + 1" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     # forbidden_number is 2, so asking for 3 should be allowed
@@ -80,7 +80,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should not raise if the last player to make tricks doesn't make the total number of tricks" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -95,7 +95,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow player to overwrite the tricks they asked for" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -105,7 +105,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow last player to overwrite the tricks they asked for" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -114,7 +114,7 @@ class RoundTest < ActiveSupport::TestCase
     end
   end
   test "should not allow any player to overwrite asked tricks if it would make the total equal to cards_dealt" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -136,7 +136,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow overwriting actual_tricks when round is complete" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 3)
@@ -160,7 +160,7 @@ class RoundTest < ActiveSupport::TestCase
 
   test "should not allow overwriting actual_tricks when round is complete if it would break total" do
     skip "SKIP: we're trying to allow an invalid state! So this test doesn't make sense anymore"
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -175,7 +175,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow overwriting actual_tricks for non-last player when round is not complete" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -188,7 +188,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow overwriting actual_tricks for last player" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)
@@ -202,7 +202,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow overwriting predicted_tricks that changes forbidden_number" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     # forbidden_number is 2
@@ -216,7 +216,7 @@ class RoundTest < ActiveSupport::TestCase
   end
 
   test "should allow overwriting actual_tricks multiple times when round is complete" do
-    round = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round = @game.create_next_round(7)
     @game.ask_for_tricks(round, @player1, 2)
     @game.ask_for_tricks(round, @player2, 3)
     @game.ask_for_tricks(round, @player3, 1)

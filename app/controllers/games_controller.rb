@@ -39,7 +39,7 @@ class GamesController < ApplicationController
   end
 
   def create
-    @game = Game.new(current_round_number: 0)
+    @game = Game.new(current_round_number: 1)
     @players_params = default_players_params(params[:players])
     @rounds_params = default_rounds_params(params[:rounds])
     @player_count = count_players(@players_params)

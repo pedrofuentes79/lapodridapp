@@ -35,7 +35,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_220849) do
 
   create_table "games", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "current_round_number", default: 0
+    t.integer "current_round_number", default: 1
     t.datetime "ended_at"
     t.string "game_id"
     t.datetime "started_at"

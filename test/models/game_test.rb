@@ -51,8 +51,8 @@ class GameTest < ActiveSupport::TestCase
     @game.game_participations.create(player: @alice, position: 1)
     @game.game_participations.create(player: @bob, position: 2)
 
-    round1 = @game.rounds.create(cards_dealt: 7, round_number: 0)
-    round2 = @game.rounds.create(cards_dealt: 6, round_number: 1)
+    round1 = @game.rounds.create(cards_dealt: 7, round_number: 1)
+    round2 = @game.rounds.create(cards_dealt: 6, round_number: 2)
 
     @game.ask_for_tricks(round1, @alice, 2)
     @game.ask_for_tricks(round1, @bob, 3)
@@ -75,7 +75,7 @@ class GameTest < ActiveSupport::TestCase
     @game.game_participations.create(player: @alice, position: 1)
     @game.game_participations.create(player: @bob, position: 2)
 
-    round1 = @game.rounds.create(cards_dealt: 7, round_number: 0)
+    round1 = @game.create_next_round(7)
 
     # Valid state
     @game.ask_for_tricks(round1, @alice, 2)
@@ -97,8 +97,8 @@ class GameTest < ActiveSupport::TestCase
     @game.game_participations.create(player: @alice, position: 1)
     @game.game_participations.create(player: @bob, position: 2)
 
-    round1 = @game.rounds.create(cards_dealt: 7, round_number: 0)
-    round2 = @game.rounds.create(cards_dealt: 6, round_number: 1)
+    round1 = @game.create_next_round(7)
+    round2 = @game.create_next_round(6)
 
     @game.ask_for_tricks(round1, @alice, 2)
     @game.ask_for_tricks(round1, @bob, 3)
@@ -150,8 +150,8 @@ class GameTest < ActiveSupport::TestCase
     assert_includes @game.rounds, round1
     assert_includes @game.rounds, round2
 
-    assert_equal 0, round1.round_number
-    assert_equal 1, round2.round_number
+    assert_equal 1, round1.round_number
+    assert_equal 2, round2.round_number
   end
 
   test "should raise if trying to create a round with a non-sequential round number" do
@@ -162,7 +162,7 @@ class GameTest < ActiveSupport::TestCase
 
     # manually create a round with a bigger number
     error = assert_raises(RuntimeError) do
-      @game.rounds.create(cards_dealt: 6, round_number: 2)
+      @game.rounds.create(cards_dealt: 6, round_number: 3)
     end
     assert_equal "The round numbers are not sequential", error.message
   end
@@ -171,22 +171,22 @@ class GameTest < ActiveSupport::TestCase
     @game.game_participations.create(player: @alice, position: 1)
     @game.game_participations.create(player: @bob, position: 2)
 
-    # Create round 0
+    # Create round 1
     _ = @game.create_next_round(7)
 
-    # Try to create round 2 directly (skipping round 1) - should fail validation
-    round2 = Round.new(game: @game, cards_dealt: 6, round_number: 2)
-    assert_not round2.valid?
-    assert_includes round2.errors[:round_number], "must be sequential. Expected 1, got 2"
-
-    # Create round 1 first, then use update_column to change it to round 2 (bypassing validations)
-    round1 = @game.create_next_round(6)
-    round1.update_column(:round_number, 2) # Create gap by changing round_number to 2
-
-    # Now try to create round 3 - should fail because round 1 is missing
-    round3 = Round.new(game: @game, cards_dealt: 5, round_number: 3)
+    # Try to create round 3 directly (skipping round 2) - should fail validation
+    round3 = Round.new(game: @game, cards_dealt: 6, round_number: 3)
     assert_not round3.valid?
-    assert_includes round3.errors[:round_number], "is not sequential - there are gaps in existing rounds"
+    assert_includes round3.errors[:round_number], "must be sequential. Expected 2, got 3"
+
+    # Create round 2 first, then use update_column to change it to round 3 (bypassing validations)
+    round2 = @game.create_next_round(6)
+    round2.update_column(:round_number, 3) # Create gap by changing round_number to 3
+
+    # Now try to create round 4 - should fail because round 3 is missing
+    round4 = Round.new(game: @game, cards_dealt: 5, round_number: 4)
+    assert_not round4.valid?
+    assert_includes round4.errors[:round_number], "is not sequential - there are gaps in existing rounds"
   end
 
   # ----- TESTS FOR THE MAXIMUM NUMBER OF CARDS DEALT -----
@@ -249,19 +249,19 @@ class GameTest < ActiveSupport::TestCase
   # ----- TESTS FOR PLAYER POSITION CALCULATION -----
 
   test "should advance starting position after the first round" do
-    @game.game_participations.create(player: @alice, position: 0)
-    @game.game_participations.create(player: @bob, position: 1)
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
 
     round1 = @game.create_next_round(7)
     round2 = @game.create_next_round(6)
 
-    assert_equal 0, @game.position_of(@alice)
-    assert_equal 1, @game.position_of(@bob)
+    assert_equal 1, @game.position_of(@alice)
+    assert_equal 2, @game.position_of(@bob)
 
-    assert_equal 0, round1.starts_at
+    assert_equal 1, round1.starts_at
     assert_equal @alice, round1.starting_player
 
-    assert_equal 1, round2.starts_at
+    assert_equal 2, round2.starts_at
     assert_equal @bob, round2.starting_player
   end
 
@@ -277,7 +277,7 @@ class GameTest < ActiveSupport::TestCase
     round3 = @game.create_next_round(5)
 
     # current round is #1
-    assert_equal 0, @game.current_round_number
+    assert_equal 1, @game.current_round_number
     assert_equal round1, @game.current_round
 
     @game.ask_for_tricks(round1, @alice, 2)
@@ -285,7 +285,7 @@ class GameTest < ActiveSupport::TestCase
     @game.make_tricks(round1, @alice, 2)
     @game.make_tricks(round1, @bob, 5)
 
-    assert_equal 1, @game.current_round_number
+    assert_equal 2, @game.current_round_number
     assert_equal round2, @game.current_round
 
     @game.ask_for_tricks(round2, @alice, 2)
@@ -293,20 +293,20 @@ class GameTest < ActiveSupport::TestCase
     @game.make_tricks(round2, @alice, 2)
 
     # Round 2 not complete yet
-    assert_equal 1, @game.current_round_number
+    assert_equal 2, @game.current_round_number
     assert_equal round2, @game.current_round
 
     @game.make_tricks(round2, @bob, 4)
     # now it's complete
 
-    assert_equal 2, @game.current_round_number
+    assert_equal 3, @game.current_round_number
     assert_equal round3, @game.current_round
 
     # however, when we edit round 1, current round number should still be 3 (since round 2 is still complete)
     @game.make_tricks(round1, @alice, 3)
     @game.make_tricks(round1, @bob, 4)
 
-    assert_equal 2, @game.current_round_number
+    assert_equal 3, @game.current_round_number
     assert_equal round3, @game.current_round
 
     # now we make round 3 complete
@@ -315,7 +315,7 @@ class GameTest < ActiveSupport::TestCase
     @game.make_tricks(round3, @alice, 2)
     @game.make_tricks(round3, @bob, 3)
 
-    assert_equal 2, @game.current_round_number
+    assert_equal 3, @game.current_round_number
     assert_equal round3, @game.current_round
 
     assert_equal @alice, @game.winner

@@ -7,7 +7,7 @@ class Game < ApplicationRecord
   has_many :players, through: :game_participations
   has_many :rounds, dependent: :destroy, before_add: :validate_sequential_round_number
 
-  validates :current_round_number, numericality: { greater_than_or_equal_to: 0 }
+  validates :current_round_number, numericality: { greater_than_or_equal_to: 1 }
 
   # -------------------------------- GAME BUSINESS LOGIC --------------------------------
 
@@ -26,16 +26,16 @@ class Game < ApplicationRecord
 
     round.player_makes_tricks(player, number_of_tricks)
 
-    update_current_round_number!
+    update_current_round_number! # optimize so I don't run this so many times?
   end
 
   def create_next_round(cards_dealt, has_trump: true)
     assert_sequential_incremental_round_numbers
 
     biggest_round_number = rounds.maximum(:round_number)
-    new_round_number = biggest_round_number.present? ? biggest_round_number + 1 : 0
+    new_round_number = biggest_round_number.present? ? biggest_round_number + 1 : 1
 
-    starting_position = new_round_number % players.count
+    starting_position = new_round_number % (players.count + 1)
     rounds.create(cards_dealt: cards_dealt, round_number: new_round_number, has_trump: has_trump, starts_at: starting_position)
   end
 
@@ -118,10 +118,10 @@ class Game < ApplicationRecord
 
   def update_current_round_number!
     # get the biggest round number of the rounds that are over
-    # if there are no rounds that are over, current round number would be 0 (0-indexed for now)
+    # if there are no rounds that are over, current round number would be 1
     biggest_over_round_number = rounds.select(&:valid_state?).map(&:round_number).max
     # this is to prevent the current round number from being greater than the total number of rounds
-    final_round_number = biggest_over_round_number ? [ rounds.maximum(:round_number), biggest_over_round_number + 1 ].min : 0
+    final_round_number = biggest_over_round_number ? [ rounds.maximum(:round_number), biggest_over_round_number + 1 ].min : 1
     update(current_round_number: final_round_number)
   end
 end
