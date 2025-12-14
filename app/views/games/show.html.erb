@@ -55,13 +55,8 @@
                 <% end %>
 
                 <td class="validation-cell">
-                  <% if round.valid_state? %>
-                    ✓
-                  <% elsif !round.all_players_made_tricks? %>
-                    &nbsp;
-                  <% else %>
-                    ✗
-                  <% end %>
+                  <% validation_frame_id = "validation_#{round.id}" %>
+                  <%= render partial: "games/validation_cell", locals: { round: round, frame_id: validation_frame_id } %>
                 </td>
               </tr>
             <% end %>

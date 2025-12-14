@@ -11,12 +11,13 @@
     <div class="round-row <%= "over-max" if over_max %>">
       <div class="round-input">
         <div class="field">
-          <%= label_tag "rounds_#{idx}_cards_dealt", "Round #{idx + 1} - cards dealt" %>
+          <%= label_tag "rounds_#{idx}_cards_dealt", "Ronda #{idx + 1}" %>
           <%= number_field_tag "rounds[#{idx}][cards_dealt]",
             round[:cards_dealt].to_s,
             id: "rounds_#{idx}_cards_dealt",
             min: 0,
-            data: { rounds_form_target: "cardsInput", action: "keydown.enter->rounds-form#maybeAdd" }
+            data: { rounds_form_target: "cardsInput", action: "keydown.enter->rounds-form#maybeAdd" },
+            placeholder: "Cantidad de cartas"
           %>
         </div>
         <div class="hint">

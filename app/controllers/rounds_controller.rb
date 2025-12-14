@@ -90,11 +90,17 @@ class RoundsController < ApplicationController
           turbo_stream.update(points_frame_id, points_html)
         end
 
-        # Return turbo_stream response with status cell update and all points updates
+        # Update validation cell for this round
+        validation_frame_id = "validation_#{@round.id}"
+        validation_html = render_to_string partial: "games/validation_cell", locals: { round: @round, frame_id: validation_frame_id }
+        validation_update = turbo_stream.update(validation_frame_id, validation_html)
+
+        # Return turbo_stream response with status cell update, all points updates, and validation update
         # Turbo will handle updating the frame specified in the request AND the additional points frames
         render turbo_stream: [
           turbo_stream.update(frame_id, status_cell_html),
-          *points_updates
+          *points_updates,
+          validation_update
         ]
         return
       end
