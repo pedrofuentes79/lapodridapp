@@ -83,8 +83,6 @@ class Round < ApplicationRecord
     game.players.find_by(game_participations: { position: starts_at })
   end
 
-  private
-
   def round_number_is_sequential
     return unless game.present? && round_number.present?
 
@@ -93,6 +91,8 @@ class Round < ApplicationRecord
       errors.add(:round_number, error_message)
     end
   end
+
+  private
 
   def validate_player_has_asked_for_tricks!(player, bid)
     raise "Player #{player.name} hasn't asked for tricks yet" if bid.predicted_tricks.nil?

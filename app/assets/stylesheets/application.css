@@ -338,6 +338,17 @@ h1, h2, h3 {
   white-space: nowrap;
 }
 
+.status-grid .validation-col {
+  width: 60px;
+  text-align: center;
+}
+
+.status-grid .validation-cell {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
 .status-grid .player-col {
   min-width: 140px;
 }
@@ -372,11 +383,12 @@ h1, h2, h3 {
 }
 
 .status-cell-input {
-  width: 46px;
-  padding: 4px 6px;
+  /* width: 46px; */
+  padding: 3px 3px;
   font-size: 12px;
   border: 1px solid #d1d5db;
   border-radius: 4px;
+  text-align: center;
 }
 
 .status-cell-center {
@@ -463,4 +475,14 @@ h1, h2, h3 {
   padding: 10px;
   background-color: #e7f3ff;
   border-radius: 4px;
+}
+
+input[type="number"].status-cell-input::-webkit-inner-spin-button,
+input[type="number"].status-cell-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"].status-cell-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }

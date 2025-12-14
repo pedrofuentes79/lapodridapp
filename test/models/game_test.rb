@@ -8,6 +8,8 @@ class GameTest < ActiveSupport::TestCase
     @bob = Player.find_or_create_by(name: "Bob")
     @charlie = Player.find_or_create_by(name: "Charlie")
     @david = Player.find_or_create_by(name: "David")
+    @erika = Player.find_or_create_by(name: "Erika")
+    @frank = Player.find_or_create_by(name: "Frank")
   end
 
   test "should create a game" do
@@ -251,18 +253,48 @@ class GameTest < ActiveSupport::TestCase
   test "should advance starting position after the first round" do
     @game.game_participations.create(player: @alice, position: 1)
     @game.game_participations.create(player: @bob, position: 2)
+    @game.game_participations.create(player: @charlie, position: 3)
+    @game.game_participations.create(player: @david, position: 4)
+    @game.game_participations.create(player: @erika, position: 5)
+    @game.game_participations.create(player: @frank, position: 6)
 
     round1 = @game.create_next_round(7)
     round2 = @game.create_next_round(6)
-
-    assert_equal 1, @game.position_of(@alice)
-    assert_equal 2, @game.position_of(@bob)
+    round3 = @game.create_next_round(5)
+    round4 = @game.create_next_round(4)
+    round5 = @game.create_next_round(3)
+    round6 = @game.create_next_round(2)
+    round7 = @game.create_next_round(1)
+    round8 = @game.create_next_round(2)
+    round9 = @game.create_next_round(3)
 
     assert_equal 1, round1.starts_at
     assert_equal @alice, round1.starting_player
 
     assert_equal 2, round2.starts_at
     assert_equal @bob, round2.starting_player
+
+    assert_equal 3, round3.starts_at
+    assert_equal @charlie, round3.starting_player
+
+    assert_equal 4, round4.starts_at
+    assert_equal @david, round4.starting_player
+
+    assert_equal 5, round5.starts_at
+    assert_equal @erika, round5.starting_player
+
+    assert_equal 6, round6.starts_at
+    assert_equal @frank, round6.starting_player
+
+    assert_equal 1, round7.starts_at
+    assert_equal @alice, round7.starting_player
+
+    assert_equal 2, round8.starts_at
+    assert_equal @bob, round8.starting_player
+
+    assert_equal 3, round9.starts_at
+    assert_equal @charlie, round9.starting_player
+
   end
 
   # ----- TESTS FOR CURRENT ROUND NUMBER CALCULATION -----

@@ -11,8 +11,6 @@
   </div>
 
   <div class="card">
-    <h2>Game status</h2>
-
     <% if @players.blank? %>
       <p>No players in this game yet.</p>
     <% elsif @rounds.blank? %>
@@ -22,10 +20,11 @@
         <table class="status-grid">
           <thead>
             <tr>
-              <th class="round-col">Round</th>
+              <th class="round-col">Cartas a repartir</th>
               <% @players.each do |player| %>
                 <th class="player-col"><%= player.name %></th>
               <% end %>
+              <th class="validation-col">Estado</th>
             </tr>
           </thead>
 
@@ -36,9 +35,8 @@
               <% round_bg_class = round.has_trump? ? "" : "no-trump-bg" %>
               <tr class="<%= round_bg_class %>">
                 <th class="round-col">
-                  <div><strong><%= round.round_number %></strong></div>
-                  <div class="muted">Cards: <%= round.cards_dealt %></div>
-                  <div class="muted"><%= !round.has_trump? ? "No trump" : "" %></div>
+                  <div><%= round.cards_dealt %></div>
+                  <div class="muted"><%= !round.has_trump? ? "Sin triunfo" : "" %></div>
                 </th>
 
                 <% @players.each do |player| %>
@@ -55,6 +53,16 @@
                     <%= render partial: "games/status_cell", locals: { game: @game, round: round, player: player, bid: bid, frame_id: frame_id } %>
                   </td>
                 <% end %>
+
+                <td class="validation-cell">
+                  <% if round.valid_state? %>
+                    ✓
+                  <% elsif !round.all_players_made_tricks? %>
+                    &nbsp;
+                  <% else %>
+                    ✗
+                  <% end %>
+                </td>
               </tr>
             <% end %>
           </tbody>

@@ -32,11 +32,29 @@ class Game < ApplicationRecord
   def create_next_round(cards_dealt, has_trump: true)
     assert_sequential_incremental_round_numbers
 
-    biggest_round_number = rounds.maximum(:round_number)
-    new_round_number = biggest_round_number.present? ? biggest_round_number + 1 : 1
+    new_round_number = next_round_number
+    starting_position = next_starting_position(new_round_number)
 
-    starting_position = new_round_number % (players.count + 1)
-    rounds.create(cards_dealt: cards_dealt, round_number: new_round_number, has_trump: has_trump, starts_at: starting_position)
+    rounds.create(
+      cards_dealt: cards_dealt,
+      round_number: new_round_number,
+      has_trump: has_trump,
+      starts_at: starting_position
+    )
+  end
+
+  def next_round_number
+    last_round_number = rounds.maximum(:round_number)
+    last_round_number ? last_round_number + 1 : 1
+  end
+
+  def next_starting_position(new_round_number)
+    # The next round should start one position after the previous round
+    previous_starting_position = rounds.find_by(round_number: new_round_number - 1)&.starts_at
+
+    new_starting_position = previous_starting_position ? previous_starting_position + 1 : 1
+    # Wrap around if it exceeds player count, and min value must be at least 1
+    [ new_starting_position % (players.count + 1), 1 ].max
   end
 
   def winner
@@ -88,6 +106,8 @@ class Game < ApplicationRecord
     validate_existing_rounds_are_sequential(rounds_to_check)
   end
 
+  private
+
   def validate_sequential_round_number(round)
     errors = validate_round_number_sequential(round.round_number, exclude_round_id: round.id)
     raise "The round numbers are not sequential" unless errors.empty?
@@ -96,6 +116,15 @@ class Game < ApplicationRecord
   def assert_sequential_incremental_round_numbers
     errors = validate_existing_rounds_are_sequential(rounds)
     raise "The round numbers are not sequential" unless errors.empty?
+  end
+
+  def validate_existing_rounds_are_sequential(rounds_to_check)
+    nums = rounds_to_check.pluck(:round_number).sort
+    return [] if nums.empty?
+    if nums != (nums.first..nums.last).to_a
+      return [ "is not sequential - there are gaps in existing rounds" ]
+    end
+    []
   end
 
   private
@@ -107,14 +136,6 @@ class Game < ApplicationRecord
     end
   end
 
-  def validate_existing_rounds_are_sequential(rounds_to_check)
-    nums = rounds_to_check.pluck(:round_number).sort
-    return [] if nums.empty?
-    if nums != (nums.first..nums.last).to_a
-      return [ "is not sequential - there are gaps in existing rounds" ]
-    end
-    []
-  end
 
   def update_current_round_number!
     # get the biggest round number of the rounds that are over
