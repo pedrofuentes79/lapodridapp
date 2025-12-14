@@ -78,11 +78,16 @@ class RoundsController < ApplicationController
       frame_id = "bid_cell_#{@round.id}_#{player.id}"
 
       if turbo_frame_request?
-        # Update the status cell
-        status_cell_html = render_to_string partial: "games/status_cell", locals: { game: @game, round: @round, player: player, bid: bid, frame_id: frame_id }
+        # Update all status cells for all players in this round (needed for forbidden_number updates)
+        @players = @game.game_participations.includes(:player).order(:position).map(&:player)
+        status_cell_updates = @players.map do |p|
+          p_bid = @round.bids.find_by(player_id: p.id)
+          p_frame_id = "bid_cell_#{@round.id}_#{p.id}"
+          p_status_cell_html = render_to_string partial: "games/status_cell", locals: { game: @game, round: @round, player: p, bid: p_bid, frame_id: p_frame_id }
+          turbo_stream.update(p_frame_id, p_status_cell_html)
+        end
 
         # Update all points frames for all players in this round
-        @players = @game.game_participations.includes(:player).order(:position).map(&:player)
         points_updates = @players.map do |p|
           p_bid = @round.bids.find_by(player_id: p.id)
           points_frame_id = "points_#{@round.id}_#{p.id}"
@@ -95,10 +100,10 @@ class RoundsController < ApplicationController
         validation_html = render_to_string partial: "games/validation_cell", locals: { round: @round, frame_id: validation_frame_id }
         validation_update = turbo_stream.update(validation_frame_id, validation_html)
 
-        # Return turbo_stream response with status cell update, all points updates, and validation update
-        # Turbo will handle updating the frame specified in the request AND the additional points frames
+        # Return turbo_stream response with all status cell updates, all points updates, and validation update
+        # Turbo will handle updating all the frames
         render turbo_stream: [
-          turbo_stream.update(frame_id, status_cell_html),
+          *status_cell_updates,
           *points_updates,
           validation_update
         ]

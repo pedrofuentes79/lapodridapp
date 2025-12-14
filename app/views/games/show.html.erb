@@ -25,6 +25,8 @@
                 <th class="player-col"><%= player.name %></th>
               <% end %>
               <th class="validation-col">Estado</th>
+              <th class="asked-tricks-col">Pedidas</th>
+              <th class="made-tricks-col">Hechas</th>
             </tr>
           </thead>
 
@@ -57,6 +59,12 @@
                 <td class="validation-cell">
                   <% validation_frame_id = "validation_#{round.id}" %>
                   <%= render partial: "games/validation_cell", locals: { round: round, frame_id: validation_frame_id } %>
+                </td>
+                <td class="asked-tricks-cell">
+                  <%= round.total_asked_tricks %>
+                </td>
+                <td class="made-tricks-cell">
+                  <%= round.total_made_tricks %>
                 </td>
               </tr>
             <% end %>

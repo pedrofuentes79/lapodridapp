@@ -42,6 +42,10 @@
     <% if error_message.present? %>
       <div class="status-cell-error"><%= error_message %></div>
     <% end %>
+
+    <% if round.forbidden_number.present? && bid&.predicted_tricks.nil? && round.forbidden_number >= 0%>
+      <div class="status-cell-forbidden">No puede pedir <%= round.forbidden_number %></div>
+    <% end %>
   </div>
 <% end %>
 

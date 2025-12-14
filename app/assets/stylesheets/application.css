@@ -409,6 +409,13 @@ h1, h2, h3 {
   color: #721c24;
 }
 
+.status-cell-forbidden {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #dc3545;
+  font-weight: 600;
+}
+
 .game-info {
   background: white;
   padding: 15px;
