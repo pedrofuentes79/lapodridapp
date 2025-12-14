@@ -48,10 +48,10 @@ class GamesController < ApplicationController
     players_data = []
     players_source = normalize_indexed_params(params[:players])
     if players_source.present?
-      players_source.each_with_index do |player_params, index|
+      players_source.each.with_index(1) do |player_params, index|
         player_name = player_params[:name].to_s.strip
         next if player_name.blank?
-        players_data << { name: player_name, index: index }
+        players_data << { name: player_name, position: index }
       end
     end
 
@@ -64,11 +64,11 @@ class GamesController < ApplicationController
     rounds_data = []
     rounds_source = normalize_indexed_params(params[:rounds])
     if rounds_source.present?
-      rounds_source.each_with_index do |round_params, index|
+      rounds_source.each.with_index(1) do |round_params, index|
         cards_dealt = round_params[:cards_dealt].to_i
         next if cards_dealt.zero?
         has_trump = round_params[:has_trump] == "1" || round_params[:has_trump] == true
-        rounds_data << { cards_dealt: cards_dealt, has_trump: has_trump, index: index }
+        rounds_data << { cards_dealt: cards_dealt, has_trump: has_trump, round_number: index }
       end
     end
 
@@ -83,18 +83,18 @@ class GamesController < ApplicationController
     end
 
     # Create players and game participations
-    players_data.each_with_index do |player_data, position|
+    players_data.each do |player_data|
       player = Player.find_or_create_by(name: player_data[:name])
 
       # If player was just created but validation failed
       unless player.persisted?
-        @game.errors.add(:base, "Player #{player_data[:index] + 1}: #{player.errors.full_messages.join(', ')}")
+        @game.errors.add(:base, "Player #{player_data[:position]}: #{player.errors.full_messages.join(', ')}")
         next
       end
 
-      participation = @game.game_participations.build(player: player, position: position)
+      participation = @game.game_participations.build(player: player, position: player_data[:position])
       unless participation.save
-        @game.errors.add(:base, "Player #{player_data[:index] + 1}: #{participation.errors.full_messages.join(', ')}")
+        @game.errors.add(:base, "Player #{player_data[:position]}: #{participation.errors.full_messages.join(', ')}")
       end
     end
 
@@ -111,7 +111,7 @@ class GamesController < ApplicationController
       max_cards = @game.maximum_cards_dealt_for_players(player_count, has_trump: has_trump)
 
       if round_data[:cards_dealt] > max_cards
-        @game.errors.add(:base, "Round #{round_data[:index] + 1}: Cards dealt (#{round_data[:cards_dealt]}) exceeds maximum (#{max_cards}) for #{player_count} players#{has_trump ? ' (with trump)' : ' (without trump)'}")
+        @game.errors.add(:base, "Round #{round_data[:round_number]}: Cards dealt (#{round_data[:cards_dealt]}) exceeds maximum (#{max_cards}) for #{player_count} players#{has_trump ? ' (with trump)' : ' (without trump)'}")
       end
     end
 
@@ -126,7 +126,7 @@ class GamesController < ApplicationController
       begin
         @game.create_next_round(round_data[:cards_dealt], has_trump: has_trump)
       rescue RuntimeError => e
-        @game.errors.add(:base, "Round #{round_data[:index] + 1}: #{e.message}")
+        @game.errors.add(:base, "Round #{round_data[:round_number]}: #{e.message}")
       end
     end
 

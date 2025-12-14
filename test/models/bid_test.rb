@@ -3,8 +3,8 @@ require "test_helper"
 class BidTest < ActiveSupport::TestCase
   def setup
     @game = Game.create
-    @player1 = Player.create(name: "Alice")
-    @player2 = Player.create(name: "Bob")
+    @player1 = Player.find_or_create_by(name: "Alice")
+    @player2 = Player.find_or_create_by(name: "Bob")
     @game.game_participations.create(player: @player1, position: 1)
     @game.game_participations.create(player: @player2, position: 2)
     @round = @game.rounds.create(cards_dealt: 7, round_number: 1)
@@ -16,7 +16,7 @@ class BidTest < ActiveSupport::TestCase
   test "should belong to a round and player" do
     # Bid is already created by the after_create callback
     bid = @round.bids.find_by(player: @player1)
-    
+
     assert_equal @round, bid.round
     assert_equal @player1, bid.player
   end
@@ -25,7 +25,7 @@ class BidTest < ActiveSupport::TestCase
     # Bids are already created by the after_create callback
     # Try to create a duplicate bid for a player that already has one
     duplicate_bid = @round.bids.build(player: @player1, predicted_tricks: 2)
-    
+
     assert_not duplicate_bid.valid?
     assert_includes duplicate_bid.errors[:player_id], "has already been taken"
   end

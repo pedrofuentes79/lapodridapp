@@ -4,10 +4,10 @@ require "test_helper"
 class GameTest < ActiveSupport::TestCase
   def setup
     @game = Game.create
-    @alice = Player.create(name: "Alice")
-    @bob = Player.create(name: "Bob")
-    @charlie = Player.create(name: "Charlie")
-    @david = Player.create(name: "David")
+    @alice = Player.find_or_create_by(name: "Alice")
+    @bob = Player.find_or_create_by(name: "Bob")
+    @charlie = Player.find_or_create_by(name: "Charlie")
+    @david = Player.find_or_create_by(name: "David")
   end
 
   test "should create a game" do
@@ -266,8 +266,6 @@ class GameTest < ActiveSupport::TestCase
   end
 
   # ----- TESTS FOR CURRENT ROUND NUMBER CALCULATION -----
-  # TODO: fix 0-indexing... move everything to 1-indexing
-  # there are no arrays here so it doesn't make sense to have 0-indexing
   test "should update the current round number when a round is over" do
     @game.game_participations.create(player: @alice, position: 1)
     @game.game_participations.create(player: @bob, position: 2)

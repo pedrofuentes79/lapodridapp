@@ -3,9 +3,9 @@ require "test_helper"
 class RoundTest < ActiveSupport::TestCase
   def setup
     @game = Game.create
-    @player1 = Player.create(name: "Alice")
-    @player2 = Player.create(name: "Bob")
-    @player3 = Player.create(name: "Charlie")
+    @player1 = Player.find_or_create_by(name: "Alice")
+    @player2 = Player.find_or_create_by(name: "Bob")
+    @player3 = Player.find_or_create_by(name: "Charlie")
     @game.game_participations.create(player: @player1, position: 1)
     @game.game_participations.create(player: @player2, position: 2)
     @game.game_participations.create(player: @player3, position: 3)
@@ -19,9 +19,9 @@ class RoundTest < ActiveSupport::TestCase
 
   test "should create empty bids for each player" do
     round = @game.create_next_round(7)
-    
+
     assert_equal @game.players.count, round.bids.count
-    assert_equal @game.players.pluck(:id), round.bids.pluck(:player_id)
+    assert_equal @game.players.pluck(:id).sort, round.bids.pluck(:player_id).sort
   end
 
   test "should know forbidden number only when one player doesn't have a bid" do
@@ -43,7 +43,7 @@ class RoundTest < ActiveSupport::TestCase
     round.player_asks_for_tricks(@player1, 5)
     round.player_asks_for_tricks(@player2, 3)
     round.player_asks_for_tricks(@player3, 2)
-    round.player_makes_tricks(@player1, 3) 
+    round.player_makes_tricks(@player1, 3)
     round.player_makes_tricks(@player2, 2)
     round.player_makes_tricks(@player3, 2)
     assert_equal 3, round.points_for_player(@player1)

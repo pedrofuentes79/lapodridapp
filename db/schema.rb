@@ -27,7 +27,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_220849) do
     t.datetime "created_at", null: false
     t.integer "game_id", null: false
     t.integer "player_id", null: false
-    t.integer "position"
+    t.integer "position", null: false
     t.datetime "updated_at", null: false
     t.index ["game_id"], name: "index_game_participations_on_game_id"
     t.index ["player_id"], name: "index_game_participations_on_player_id"
@@ -37,23 +37,23 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_220849) do
     t.datetime "created_at", null: false
     t.integer "current_round_number", default: 1
     t.datetime "ended_at"
-    t.string "game_id"
     t.datetime "started_at"
     t.datetime "updated_at", null: false
   end
 
   create_table "players", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "name", collation: "NOCASE"
+    t.string "name", null: false, collation: "NOCASE"
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_players_on_name", unique: true
   end
 
   create_table "rounds", force: :cascade do |t|
-    t.integer "cards_dealt"
+    t.integer "cards_dealt", null: false
     t.datetime "created_at", null: false
     t.integer "game_id", null: false
-    t.boolean "has_trump", default: false
-    t.integer "round_number"
+    t.boolean "has_trump", default: false, null: false
+    t.integer "round_number", null: false
     t.integer "starts_at"
     t.datetime "updated_at", null: false
     t.index ["game_id"], name: "index_rounds_on_game_id"
