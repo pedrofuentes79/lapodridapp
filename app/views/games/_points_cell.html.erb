@@ -1,0 +1,8 @@
+<%= turbo_frame_tag frame_id do %>
+  <% if round.valid_state? %>
+    <span class="status-cell-points"><%= bid&.points || "-" %></span>
+  <% else %>
+    <span class="status-cell-points muted">-</span>
+  <% end %>
+<% end %>
+

@@ -2,69 +2,65 @@
   <div class="header">
     <h1>Game #<%= @game.id %></h1>
     <div class="actions">
-      <%= link_to "Edit", edit_game_path(@game), class: "btn" %>
       <%= link_to "Back to Games", games_path, class: "btn" %>
     </div>
   </div>
 
   <div class="game-info">
-    <p><strong>Current Round Number:</strong> <%= @game.current_round_number %></p>
     <p><strong>Total Rounds:</strong> <%= @game.rounds.count %></p>
   </div>
 
-  <turbo-frame id="players-section">
-    <div class="players-section">
-      <h2>Players</h2>
-      <% if @game.players.any? %>
-        <ul class="players-list">
-          <% @game.players.order("game_participations.position").each do |player| %>
-            <li>
-              <%= player.name %> (Position: <%= player.game_participations.find_by(game: @game).position %>)
-            </li>
-          <% end %>
-        </ul>
-      <% else %>
-        <p>No players yet.</p>
-      <% end %>
+  <div class="card">
+    <h2>Game status</h2>
 
-      <%= form_with url: add_player_game_path(@game), method: :post, local: true do |form| %>
-        <div class="add-player-form">
-          <%= form.label :player_id, "Add Player" %>
-          <%= form.collection_select :player_id, Player.all, :id, :name, { prompt: "Select a player" }, { required: true } %>
-          <%= form.number_field :position, placeholder: "Position (optional)", min: 0 %>
-          <%= form.submit "Add Player", class: "btn btn-primary" %>
-        </div>
-      <% end %>
-    </div>
-  </turbo-frame>
+    <% if @players.blank? %>
+      <p>No players in this game yet.</p>
+    <% elsif @rounds.blank? %>
+      <p>No rounds yet.</p>
+    <% else %>
+      <div class="status-grid-wrapper">
+        <table class="status-grid">
+          <thead>
+            <tr>
+              <th class="round-col">Round</th>
+              <% @players.each do |player| %>
+                <th class="player-col"><%= player.name %></th>
+              <% end %>
+            </tr>
+          </thead>
 
-  <turbo-frame id="rounds-section">
-    <div class="rounds-section">
-      <h2>Rounds</h2>
-      
-      <%= form_with url: game_rounds_path(@game), method: :post, local: true do |form| %>
-        <div class="create-round-form">
-          <%= form.label :cards_dealt, "Create Next Round" %>
-          <%= form.number_field :cards_dealt, placeholder: "Cards dealt", min: 1, max: 13, required: true %>
-          <%= form.check_box :has_trump, checked: true %>
-          <%= form.submit "Create Round", class: "btn btn-primary" %>
-        </div>
-      <% end %>
+          <tbody>
+            <% @rounds.each do |round| %>
+              <% bids_by_player = round.bids.index_by(&:player_id) %>
+              <% starting_player = round.starting_player %>
+              <% round_bg_class = round.has_trump? ? "" : "no-trump-bg" %>
+              <tr class="<%= round_bg_class %>">
+                <th class="round-col">
+                  <div><strong><%= round.round_number %></strong></div>
+                  <div class="muted">Cards: <%= round.cards_dealt %></div>
+                  <div class="muted"><%= !round.has_trump? ? "No trump" : "" %></div>
+                </th>
 
-      <% if @game.rounds.any? %>
-        <div class="rounds-list">
-          <% @game.rounds.order(:round_number).each do |round| %>
-            <div class="round-card">
-              <h3><%= link_to "Round #{round.round_number}", [@game, round] %></h3>
-              <p>Cards Dealt: <%= round.cards_dealt %></p>
-              <p>Status: <%= round.valid_state? ? "✓ Valid" : "⚠ Invalid" %></p>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <p>No rounds yet. Create the first round above!</p>
-      <% end %>
-    </div>
-  </turbo-frame>
+                <% @players.each do |player| %>
+                  <% bid = bids_by_player[player.id] %>
+                  <% frame_id = "bid_cell_#{round.id}_#{player.id}" %>
+
+                  <% cell_classes = "status-cell" %>
+                  <% if player == starting_player %>
+                    <% cell_classes += " starting-player-cell" %>
+                  <% end %>
+                  <% cell_classes += " no-trump-bg" unless round.has_trump? %>
+
+                  <td class="<%= cell_classes %>">
+                    <%= render partial: "games/status_cell", locals: { game: @game, round: round, player: player, bid: bid, frame_id: frame_id } %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
 </div>
 

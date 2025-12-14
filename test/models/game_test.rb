@@ -59,7 +59,6 @@ class GameTest < ActiveSupport::TestCase
     @game.make_tricks(round1, @alice, 3)
 
     assert !round1.all_players_made_tricks?
-    # assert !@game.all_players_made_tricks_in_previous_rounds?(round2)
 
     error = assert_raises(RuntimeError) do
       @game.ask_for_tricks(round2, @alice, 2)
@@ -247,4 +246,78 @@ class GameTest < ActiveSupport::TestCase
 
   # TODO: leaderboard tests...
 
+  # ----- TESTS FOR PLAYER POSITION CALCULATION -----
+
+  test "should advance starting position after the first round" do
+    @game.game_participations.create(player: @alice, position: 0)
+    @game.game_participations.create(player: @bob, position: 1)
+
+    round1 = @game.create_next_round(7)
+    round2 = @game.create_next_round(6)
+
+    assert_equal 0, @game.position_of(@alice)
+    assert_equal 1, @game.position_of(@bob)
+
+    assert_equal 0, round1.starts_at
+    assert_equal @alice, round1.starting_player
+
+    assert_equal 1, round2.starts_at
+    assert_equal @bob, round2.starting_player
+  end
+
+  # ----- TESTS FOR CURRENT ROUND NUMBER CALCULATION -----
+  # TODO: fix 0-indexing... move everything to 1-indexing
+  # there are no arrays here so it doesn't make sense to have 0-indexing
+  test "should update the current round number when a round is over" do
+    @game.game_participations.create(player: @alice, position: 1)
+    @game.game_participations.create(player: @bob, position: 2)
+
+    round1 = @game.create_next_round(7)
+    round2 = @game.create_next_round(6)
+    round3 = @game.create_next_round(5)
+
+    # current round is #1
+    assert_equal 0, @game.current_round_number
+    assert_equal round1, @game.current_round
+
+    @game.ask_for_tricks(round1, @alice, 2)
+    @game.ask_for_tricks(round1, @bob, 4)
+    @game.make_tricks(round1, @alice, 2)
+    @game.make_tricks(round1, @bob, 5)
+
+    assert_equal 1, @game.current_round_number
+    assert_equal round2, @game.current_round
+
+    @game.ask_for_tricks(round2, @alice, 2)
+    @game.ask_for_tricks(round2, @bob, 5)
+    @game.make_tricks(round2, @alice, 2)
+
+    # Round 2 not complete yet
+    assert_equal 1, @game.current_round_number
+    assert_equal round2, @game.current_round
+
+    @game.make_tricks(round2, @bob, 4)
+    # now it's complete
+
+    assert_equal 2, @game.current_round_number
+    assert_equal round3, @game.current_round
+
+    # however, when we edit round 1, current round number should still be 3 (since round 2 is still complete)
+    @game.make_tricks(round1, @alice, 3)
+    @game.make_tricks(round1, @bob, 4)
+
+    assert_equal 2, @game.current_round_number
+    assert_equal round3, @game.current_round
+
+    # now we make round 3 complete
+    @game.ask_for_tricks(round3, @alice, 2)
+    @game.ask_for_tricks(round3, @bob, 4)
+    @game.make_tricks(round3, @alice, 2)
+    @game.make_tricks(round3, @bob, 3)
+
+    assert_equal 2, @game.current_round_number
+    assert_equal round3, @game.current_round
+
+    assert_equal @alice, @game.winner
+  end
 end

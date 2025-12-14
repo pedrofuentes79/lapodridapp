@@ -54,6 +54,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_10_220849) do
     t.integer "game_id", null: false
     t.boolean "has_trump", default: false
     t.integer "round_number"
+    t.integer "starts_at"
     t.datetime "updated_at", null: false
     t.index ["game_id"], name: "index_rounds_on_game_id"
   end

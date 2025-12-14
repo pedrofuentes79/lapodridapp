@@ -1,0 +1,48 @@
+<% error_message ||= nil %>
+
+<%= turbo_frame_tag frame_id do %>
+  <div class="status-cell-inner">
+    <div class="status-cell-topright">
+      <%= form_with url: update_bid_game_round_path(game, round),
+                    method: :patch,
+                    data: { controller: "autosubmit", action: "input->autosubmit#schedule change->autosubmit#schedule", turbo_frame: frame_id },
+                    class: "status-cell-form" do %>
+        <%= hidden_field_tag :player_id, player.id %>
+
+        <%= number_field_tag :predicted_tricks,
+                             bid&.predicted_tricks,
+                             min: 0,
+                             max: round.cards_dealt,
+                             class: "status-cell-input",
+                             title: "Asked tricks" %>
+
+        <%= number_field_tag :actual_tricks,
+                             bid&.actual_tricks,
+                             min: 0,
+                             max: round.cards_dealt,
+                             class: "status-cell-input",
+                             title: "Made tricks",
+                             disabled: bid&.predicted_tricks.nil? %>
+
+        <%= submit_tag "", style: "display:none" %>
+      <% end %>
+    </div>
+
+    <div class="status-cell-center">
+      <% points_frame_id = "points_#{round.id}_#{player.id}" %>
+      <%= turbo_frame_tag points_frame_id, src: points_game_round_path(game, round, player_id: player.id), loading: "lazy" do %>
+        <% if round.valid_state? %>
+          <span class="status-cell-points"><%= bid&.points || "-" %></span>
+        <% else %>
+          <span class="status-cell-points muted">-</span>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if error_message.present? %>
+      <div class="status-cell-error"><%= error_message %></div>
+    <% end %>
+  </div>
+<% end %>
+
+

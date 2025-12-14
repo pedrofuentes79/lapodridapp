@@ -234,5 +234,4 @@ class RoundTest < ActiveSupport::TestCase
     end
     assert_equal 7, round.total_made_tricks
   end
-
 end

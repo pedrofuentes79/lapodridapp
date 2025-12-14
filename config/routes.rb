@@ -25,6 +25,8 @@ Rails.application.routes.draw do
       member do
         post :ask_for_tricks
         post :make_tricks
+        patch :update_bid
+        get :points
       end
     end
   end

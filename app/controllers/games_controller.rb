@@ -1,5 +1,5 @@
 class GamesController < ApplicationController
-  before_action :set_game, only: [ :show, :edit, :update, :destroy, :add_player ]
+  before_action :set_game, only: [ :show, :update, :destroy, :add_player ]
 
   def index
     @games = Game.all
@@ -13,6 +13,8 @@ class GamesController < ApplicationController
   end
 
   def show
+    @players = @game.game_participations.includes(:player).order(:position).map(&:player)
+    @rounds = @game.rounds.includes(bids: :player).order(:round_number)
   end
 
   def preview

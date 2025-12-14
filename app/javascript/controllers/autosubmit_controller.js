@@ -40,7 +40,17 @@ export default class extends Controller {
     }
 
     // Fallback for older browsers: click the submitter.
-    if (this.hasSubmitterTarget) this.submitterTarget.click()
+    if (this.hasSubmitterTarget) {
+      this.submitterTarget.click()
+      return
+    }
+
+    // Generic fallback: submit the form itself (used by small Turbo-frame forms like the game status grid cells)
+    if (typeof form.requestSubmit === "function") {
+      form.requestSubmit()
+    } else {
+      form.submit()
+    }
   }
 }
 

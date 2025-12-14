@@ -25,6 +25,8 @@ class Game < ApplicationRecord
     validate_all_previous_rounds_are_valid?(round)
 
     round.player_makes_tricks(player, number_of_tricks)
+
+    update_current_round_number!
   end
 
   def create_next_round(cards_dealt, has_trump: true)
@@ -33,7 +35,8 @@ class Game < ApplicationRecord
     biggest_round_number = rounds.maximum(:round_number)
     new_round_number = biggest_round_number.present? ? biggest_round_number + 1 : 0
 
-    rounds.create(cards_dealt: cards_dealt, round_number: new_round_number, has_trump: has_trump)
+    starting_position = new_round_number % players.count
+    rounds.create(cards_dealt: cards_dealt, round_number: new_round_number, has_trump: has_trump, starts_at: starting_position)
   end
 
   def winner
@@ -47,6 +50,9 @@ class Game < ApplicationRecord
           &.first                                         # return that player
   end
 
+  def position_of(player)
+    game_participations.find_by(player: player)&.position
+  end
 
   # -------------------------------- HELPERS --------------------------------
 
@@ -108,5 +114,14 @@ class Game < ApplicationRecord
       return [ "is not sequential - there are gaps in existing rounds" ]
     end
     []
+  end
+
+  def update_current_round_number!
+    # get the biggest round number of the rounds that are over
+    # if there are no rounds that are over, current round number would be 0 (0-indexed for now)
+    biggest_over_round_number = rounds.select(&:valid_state?).map(&:round_number).max
+    # this is to prevent the current round number from being greater than the total number of rounds
+    final_round_number = biggest_over_round_number ? [ rounds.maximum(:round_number), biggest_over_round_number + 1 ].min : 0
+    update(current_round_number: final_round_number)
   end
 end

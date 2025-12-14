@@ -297,6 +297,106 @@ h1, h2, h3 {
   color: #6c757d;
 }
 
+.muted {
+  color: #6c757d;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.status-grid-wrapper {
+  overflow-x: auto;
+}
+
+.status-grid {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.status-grid th,
+.status-grid td {
+  border: 1px solid #e5e7eb;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.status-grid thead th {
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.status-grid .round-col {
+  width: 120px;
+  white-space: nowrap;
+}
+
+.status-grid .player-col {
+  min-width: 140px;
+}
+
+.status-grid .no-trump-bg {
+  background-color: #f8f9fa;
+}
+
+.status-cell {
+  padding: 0;
+}
+.status-grid td.starting-player-cell {
+  border: 2px solid #089181;
+}
+
+.status-cell-inner {
+  position: relative;
+  min-height: 76px;
+  padding: 8px;
+}
+
+.status-cell-topright {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.status-cell-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.status-cell-input {
+  width: 46px;
+  padding: 4px 6px;
+  font-size: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.status-cell-center {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-cell-points {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.status-cell-error {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #721c24;
+}
+
 .game-info {
   background: white;
   padding: 15px;

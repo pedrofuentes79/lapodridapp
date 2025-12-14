@@ -14,7 +14,6 @@
           <p>Current Round: <%= game.current_round_number %></p>
           <div class="actions">
             <%= link_to "View", game, class: "btn" %>
-            <%= link_to "Edit", edit_game_path(game), class: "btn" %>
             <%= button_to "Delete", game, method: :delete, class: "btn btn-danger", data: { turbo_confirm: "Are you sure?" } %>
           </div>
         </div>

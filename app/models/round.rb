@@ -1,3 +1,7 @@
+# TODO: starts_at is redundant. It can be computed like this
+# starts_at = round_number % game.players.count
+# i'm leaving it rn just because it doesn't bother me that much...
+
 class Round < ApplicationRecord
   belongs_to :game
   has_many :bids, dependent: :destroy
@@ -72,6 +76,10 @@ class Round < ApplicationRecord
     # If the round doesn't have trump, there is one more card available
     total_available_cards = has_trump? ? 51 : 52
     (total_available_cards / game.players.count).floor
+  end
+
+  def starting_player
+    game.players.find_by(game_participations: { position: starts_at })
   end
 
   private
