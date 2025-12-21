@@ -14,7 +14,7 @@ class Bid < ApplicationRecord
     if predicted_tricks == actual_tricks
       10 + actual_tricks * 2
     else
-      actual_tricks 
+      actual_tricks
     end
   end
 end

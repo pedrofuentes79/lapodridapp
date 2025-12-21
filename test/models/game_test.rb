@@ -294,7 +294,6 @@ class GameTest < ActiveSupport::TestCase
 
     assert_equal 3, round9.starts_at
     assert_equal @charlie, round9.starting_player
-
   end
 
   # ----- TESTS FOR CURRENT ROUND NUMBER CALCULATION -----

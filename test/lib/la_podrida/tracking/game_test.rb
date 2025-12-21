@@ -241,8 +241,8 @@ module LaPodrida
               "cards_dealt" => 5,
               "starting_position" => 1,
               "phase" => "complete",
-              "bids" => {"A" => 2, "B" => 1},
-              "tricks_won" => {"A" => 2, "B" => 3}
+              "bids" => { "A" => 2, "B" => 1 },
+              "tricks_won" => { "A" => 2, "B" => 3 }
             }
           ]
         }

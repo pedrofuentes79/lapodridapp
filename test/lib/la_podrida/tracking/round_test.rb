@@ -68,7 +68,7 @@ module LaPodrida
         round = setup_round(player_count: 2, cards_dealt: 5)
         round.place_bid("A", 3)
 
-        assert_equal({"A" => 3}, round.bids)
+        assert_equal({ "A" => 3 }, round.bids)
       end
 
       test "place bid rejects unknown player" do
@@ -208,7 +208,7 @@ module LaPodrida
         round.place_bid("B", 1)
 
         round.record_tricks("A", 3)
-        assert_equal({"A" => 3}, round.tricks_won)
+        assert_equal({ "A" => 3 }, round.tricks_won)
       end
 
       test "cannot record tricks in bidding phase" do
@@ -341,7 +341,7 @@ module LaPodrida
           "cards_dealt" => 5,
           "starting_position" => 1,
           "phase" => "playing",
-          "bids" => {"A" => 2, "B" => 1},
+          "bids" => { "A" => 2, "B" => 1 },
           "tricks_won" => {}
         }
 
@@ -349,7 +349,7 @@ module LaPodrida
 
         assert_equal player_names(2), round.players
         assert_equal :playing, round.phase
-        assert_equal({"A" => 2, "B" => 1}, round.bids)
+        assert_equal({ "A" => 2, "B" => 1 }, round.bids)
       end
 
       test "place bid returns self" do

@@ -47,7 +47,7 @@ module LaPodrida
       end
 
       def scores
-        players.to_h { |p| [p, points_for(p)] }
+        players.to_h { |p| [ p, points_for(p) ] }
       end
 
       def winner
