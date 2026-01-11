@@ -47,8 +47,8 @@ class GamesController < ApplicationController
     end
 
     @game.save_engine!
-    redirect_to game_path(@game, focus: params[:focus], scrollY: params[:scrollY])
+    redirect_to @game
   rescue LaPodrida::Error => e
-    redirect_to game_path(@game, focus: params[:focus], scrollY: params[:scrollY]), alert: e.message
+    redirect_to @game, alert: e.message
   end
 end
