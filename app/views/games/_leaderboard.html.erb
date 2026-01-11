@@ -1,0 +1,17 @@
+<%= turbo_frame_tag "leaderboard" do %>
+  <% sorted_scores = game.scores.sort_by { |_, score| -score } %>
+  <% leader = sorted_scores.first&.first %>
+
+  <table class="scores-table">
+    <tr>
+      <% sorted_scores.each do |player, _| %>
+        <th><%= player %><%= " 🏆" if game.complete? && player == leader %></th>
+      <% end %>
+    </tr>
+    <tr>
+      <% sorted_scores.each do |_, score| %>
+        <td><%= score %></td>
+      <% end %>
+    </tr>
+  </table>
+<% end %>

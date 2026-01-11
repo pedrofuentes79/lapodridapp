@@ -1,0 +1,52 @@
+<%= turbo_frame_tag dom_id(game, "round_#{idx}") do %>
+  <h3>Ronda <%= idx + 1 %> (<%= round.cards_dealt %> <%= round.cards_dealt == 1 ? "carta" : "cartas" %>)</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Jugador</th>
+        <th>Pedidas</th>
+        <th>Hechas</th>
+        <th>Puntos</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% round.players_in_order.each do |player| %>
+        <% forbidden = round.bidding? && !round.bids[player] ? round.forbidden_number : nil %>
+        <tr>
+          <td><%= player %></td>
+          <td>
+            <%= form_with url: bid_game_path(game), method: :post, data: { controller: "autosubmit", turbo_stream: true } do %>
+              <input type="hidden" name="round" value="<%= idx %>">
+              <input type="hidden" name="player" value="<%= player %>">
+              <%= select_tag :asked, options_for_select(bid_options(max: round.cards_dealt, forbidden:), round.bids[player]),
+                include_blank: "-",
+                data: { action: "change->autosubmit#submit" } %>
+            <% end %>
+          </td>
+          <td>
+            <%= form_with url: bid_game_path(game), method: :post, data: { controller: "autosubmit", turbo_stream: true } do %>
+              <input type="hidden" name="round" value="<%= idx %>">
+              <input type="hidden" name="player" value="<%= player %>">
+              <%= select_tag :made, options_for_select(bid_options(max: round.cards_dealt), round.tricks_won[player]),
+                include_blank: "-",
+                data: { action: "change->autosubmit#submit" } %>
+            <% end %>
+          </td>
+          <td><%= round.points_for(player) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <% if round.complete? %>
+    <p>
+      Total pedidas: <%= round.total_bids %> / <%= round.cards_dealt %>
+      <%= round.valid? ? "✅" : "❌" %>
+    </p>
+  <% elsif round.bidding? %>
+    <p>🗣️ Pidiendo - esperando a <%= round.current_bidder %></p>
+  <% elsif round.playing? %>
+    <p>🃏 Jugando - registrar bazas</p>
+  <% end %>
+<% end %>

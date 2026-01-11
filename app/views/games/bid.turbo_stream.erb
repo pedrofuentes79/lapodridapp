@@ -1,0 +1,7 @@
+<%= turbo_stream.replace "leaderboard" do %>
+  <%= render "leaderboard", game: @game %>
+<% end %>
+
+<%= turbo_stream.replace dom_id(@game, "round_#{@round_idx}") do %>
+  <%= render "round", game: @game, round: @game.rounds[@round_idx], idx: @round_idx %>
+<% end %>

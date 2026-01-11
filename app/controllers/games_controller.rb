@@ -27,7 +27,8 @@ class GamesController < ApplicationController
 
   def bid
     @game = Game.find(params[:id])
-    round = @game.engine.rounds[params[:round].to_i]
+    @round_idx = params[:round].to_i
+    round = @game.engine.rounds[@round_idx]
     player = params[:player]
 
     if params[:asked].present?
@@ -47,7 +48,11 @@ class GamesController < ApplicationController
     end
 
     @game.save_engine!
-    redirect_to @game
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to @game }
+    end
   rescue LaPodrida::Error => e
     redirect_to @game, alert: e.message
   end
