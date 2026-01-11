@@ -1,0 +1,23 @@
+<h1>New Game</h1>
+
+<p><%= link_to "Back", games_path %></p>
+
+<% if flash[:alert] %>
+  <p style="color: red;"><%= flash[:alert] %></p>
+<% end %>
+
+<%= form_with url: games_path, method: :post, local: true do |f| %>
+  <p>
+    <label for="players">Players (comma-separated):</label><br>
+    <input type="text" name="players" id="players" placeholder="Alice, Bob, Carol" style="width: 300px;">
+  </p>
+
+  <p>
+    <label for="cards">Cards per round (comma-separated):</label><br>
+    <input type="text" name="cards" id="cards" placeholder="1, 2, 3, 4, 5, 4, 3, 2, 1" style="width: 300px;">
+  </p>
+
+  <p>
+    <input type="submit" value="Create Game">
+  </p>
+<% end %>

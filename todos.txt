@@ -1,0 +1,2 @@
+- Global leaderboard: shows how many games a player has won
+- Local leaderboard: when playing (and looking at the grid), at the side there's a leaderboard that shows the current scores of all players.
