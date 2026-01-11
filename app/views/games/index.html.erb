@@ -1,22 +1,24 @@
 <h1>Partidas</h1>
 
-<p><%= link_to "Nueva partida", new_game_path %></p>
+<p><%= link_to "Nueva partida", new_game_path, role: "button" %></p>
 
 <% if flash[:alert] %>
-  <p style="color: red;"><%= flash[:alert] %></p>
+  <p role="alert"><%= flash[:alert] %></p>
 <% end %>
 
 <% if @games.any? %>
-  <ul>
-    <% @games.each do |game| %>
-      <li>
-        <%= link_to "##{game.id}", game %>
-        (<%= game.players.join(", ") %>)
-        - <%= game.complete? ? "Terminada" : "Ronda #{game.current_round_number}" %>
-        <%= button_to "Eliminar", game, method: :delete, data: { turbo_confirm: "¿Eliminar esta partida?" } %>
-      </li>
-    <% end %>
-  </ul>
+  <% @games.each do |game| %>
+    <article>
+      <header>
+        <%= link_to "Partida ##{game.id}", game %>
+        <small><%= game.complete? ? "Terminada" : "Ronda #{game.current_round_number}" %></small>
+      </header>
+      <p><%= game.players.join(", ") %></p>
+      <footer>
+        <%= button_to "Eliminar", game, method: :delete, class: "secondary outline", data: { turbo_confirm: "¿Eliminar esta partida?" } %>
+      </footer>
+    </article>
+  <% end %>
 <% else %>
   <p>No hay partidas.</p>
 <% end %>

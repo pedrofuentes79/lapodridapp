@@ -1,3 +1,18 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Card background -->
+  <rect x="56" y="16" width="400" height="480" rx="32" fill="#fff" stroke="#0172ad" stroke-width="8"/>
+
+  <!-- Spade symbol -->
+  <path d="M256 100
+           C256 100 156 180 156 260
+           C156 310 196 340 236 340
+           C226 370 216 400 196 420
+           L316 420
+           C296 400 286 370 276 340
+           C316 340 356 310 356 260
+           C356 180 256 100 256 100Z"
+        fill="#0172ad"/>
+
+  <!-- Spade stem -->
+  <rect x="236" y="340" width="40" height="60" fill="#0172ad"/>
 </svg>

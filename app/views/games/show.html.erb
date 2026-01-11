@@ -1,19 +1,15 @@
-<h1>Partida #<%= @game.id %></h1>
+<header class="sticky-header">
+  <h1>Partida #<%= @game.id %></h1>
+  <p><%= link_to "← Volver", games_path %></p>
 
-<p><%= link_to "Volver a partidas", games_path %></p>
+  <% if flash[:alert] %>
+    <p role="alert"><%= flash[:alert] %></p>
+  <% end %>
 
-<% if flash[:alert] %>
-  <p style="color: red;"><%= flash[:alert] %></p>
-<% end %>
+  <% sorted_scores = @game.scores.sort_by { |_, score| -score } %>
+  <% leader = sorted_scores.first&.first %>
 
-<h2>Jugadores</h2>
-<p><%= @game.players.join(", ") %></p>
-
-<% sorted_scores = @game.scores.sort_by { |_, score| -score } %>
-<% leader = sorted_scores.first&.first %>
-
-<h2>Puntajes</h2>
-<table border="1" cellpadding="5">
+  <table class="scores-table">
   <tr>
     <% sorted_scores.each do |player, _| %>
       <th><%= player %><%= " 🏆" if @game.complete? && player == leader %></th>
@@ -25,44 +21,49 @@
     <% end %>
   </tr>
 </table>
+</header>
 
 <h2>Rondas</h2>
 
 <% @game.rounds.each_with_index do |round, idx| %>
   <h3>Ronda <%= idx + 1 %> (<%= round.cards_dealt %> <%= round.cards_dealt == 1 ? "carta" : "cartas" %>)</h3>
 
-  <table border="1" cellpadding="5">
-    <tr>
-      <th>Jugador</th>
-      <th>Pedidas</th>
-      <th>Hechas</th>
-      <th>Puntos</th>
-    </tr>
-    <% round.players_in_order.each do |player| %>
-      <% forbidden = round.bidding? && !round.bids[player] ? round.forbidden_number : nil %>
+  <table>
+    <thead>
       <tr>
-        <td><%= player %></td>
-        <td>
-          <%= form_with url: bid_game_path(@game), method: :post, local: true, data: { controller: "autosubmit" } do %>
-            <input type="hidden" name="round" value="<%= idx %>">
-            <input type="hidden" name="player" value="<%= player %>">
-            <%= select_tag :asked, options_for_select(bid_options(max: round.cards_dealt, forbidden:), round.bids[player]),
-              include_blank: "-",
-              data: { action: "change->autosubmit#submit" } %>
-          <% end %>
-        </td>
-        <td>
-          <%= form_with url: bid_game_path(@game), method: :post, local: true, data: { controller: "autosubmit" } do %>
-            <input type="hidden" name="round" value="<%= idx %>">
-            <input type="hidden" name="player" value="<%= player %>">
-            <%= select_tag :made, options_for_select(bid_options(max: round.cards_dealt), round.tricks_won[player]),
-              include_blank: "-",
-              data: { action: "change->autosubmit#submit" } %>
-          <% end %>
-        </td>
-        <td><%= round.points_for(player) %></td>
+        <th>Jugador</th>
+        <th>Pedidas</th>
+        <th>Hechas</th>
+        <th>Puntos</th>
       </tr>
-    <% end %>
+    </thead>
+    <tbody>
+      <% round.players_in_order.each do |player| %>
+        <% forbidden = round.bidding? && !round.bids[player] ? round.forbidden_number : nil %>
+        <tr>
+          <td><%= player %></td>
+          <td>
+            <%= form_with url: bid_game_path(@game), method: :post, local: true, data: { controller: "autosubmit" } do %>
+              <input type="hidden" name="round" value="<%= idx %>">
+              <input type="hidden" name="player" value="<%= player %>">
+              <%= select_tag :asked, options_for_select(bid_options(max: round.cards_dealt, forbidden:), round.bids[player]),
+                include_blank: "-",
+                data: { action: "change->autosubmit#submit" } %>
+            <% end %>
+          </td>
+          <td>
+            <%= form_with url: bid_game_path(@game), method: :post, local: true, data: { controller: "autosubmit" } do %>
+              <input type="hidden" name="round" value="<%= idx %>">
+              <input type="hidden" name="player" value="<%= player %>">
+              <%= select_tag :made, options_for_select(bid_options(max: round.cards_dealt), round.tricks_won[player]),
+                include_blank: "-",
+                data: { action: "change->autosubmit#submit" } %>
+            <% end %>
+          </td>
+          <td><%= round.points_for(player) %></td>
+        </tr>
+      <% end %>
+    </tbody>
   </table>
 
   <% if round.complete? %>
