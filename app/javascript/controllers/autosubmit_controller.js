@@ -1,5 +1,16 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Restore scroll position on Turbo page load
+document.addEventListener("turbo:load", () => {
+  const params = new URLSearchParams(window.location.search)
+  const scrollY = params.get("scrollY")
+  if (scrollY) {
+    setTimeout(() => {
+      window.scrollTo(0, parseInt(scrollY, 10))
+    }, 0)
+  }
+})
+
 export default class extends Controller {
   static targets = ["submitter"]
   static values = { delay: Number }
@@ -30,10 +41,26 @@ export default class extends Controller {
   }
 
   submit() {
-    // Use the preview submitter (with formaction/formmethod/turbo-frame) so the main form still posts to /games on Create.
     const form = this.element
     if (!form) return
 
+    // Update focus to next field in column and calculate scroll position
+    const focusInput = form.querySelector("input[name='focus']")
+    let scrollY = window.scrollY
+    if (focusInput) {
+      const nextId = this.nextFieldInColumn(focusInput.value)
+      if (nextId) {
+        focusInput.value = nextId
+        scrollY = this.scrollPositionFor(nextId)
+      }
+    }
+
+    // Add scrollY to form action URL
+    const url = new URL(form.action)
+    url.searchParams.set("scrollY", scrollY)
+    form.action = url.toString()
+
+    // Use the preview submitter (with formaction/formmethod/turbo-frame) so the main form still posts to /games on Create.
     if (this.hasSubmitterTarget && typeof form.requestSubmit === "function") {
       form.requestSubmit(this.submitterTarget)
       return
@@ -51,6 +78,32 @@ export default class extends Controller {
     } else {
       form.submit()
     }
+  }
+
+  nextFieldInColumn(currentId) {
+    // IDs are like: r0-player-asked or r0-player-made
+    // Find all inputs with same suffix (asked/made) and get the next one
+    const suffix = currentId.endsWith("-asked") ? "-asked" : "-made"
+    const inputs = Array.from(document.querySelectorAll(`input[id$="${suffix}"]`))
+    const currentIndex = inputs.findIndex(it => it.id === currentId)
+    if (currentIndex >= 0 && currentIndex < inputs.length - 1) {
+      return inputs[currentIndex + 1].id
+    }
+    return currentId // Stay on same field if last
+  }
+
+  scrollPositionFor(elementId) {
+    const element = document.getElementById(elementId)
+    if (!element) return window.scrollY
+
+    const rect = element.getBoundingClientRect()
+    const margin = 100 // pixels from top of viewport
+    return Math.max(0, window.scrollY + rect.top - margin)
+  }
+
+  submitOnEnter(event) {
+    event.preventDefault()
+    this.submit()
   }
 }
 

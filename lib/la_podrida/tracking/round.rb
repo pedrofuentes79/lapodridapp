@@ -52,25 +52,6 @@ module LaPodrida
         self
       end
 
-      def can_change_bid?(player)
-        phase == :bidding && bids.key?(player)
-      end
-
-      def change_bid(player, new_count)
-        validate_phase!(:bidding)
-        raise InvalidBid, "#{player} has not bid yet" unless bids.key?(player)
-        validate_bid_count!(new_count)
-
-        old_bid = @bids.delete(player)
-        if forbidden?(new_count)
-          @bids[player] = old_bid
-          raise ForbiddenBidError, "Cannot bid #{new_count} - it's the forbidden number"
-        end
-
-        @bids[player] = new_count
-        self
-      end
-
       def record_tricks(player, count)
         validate_phase!(:playing)
         validate_player!(player)
@@ -82,12 +63,19 @@ module LaPodrida
         self
       end
 
-      def change_tricks(player, new_count)
-        validate_phase!(:playing)
+      def correct_bid(player, count)
         validate_player!(player)
-        validate_trick_count!(new_count)
+        validate_bid_count!(count)
+        @bids[player] = count
+        advance_to_playing if all_bids_placed?
+        self
+      end
 
-        @tricks_won[player] = new_count
+      def correct_tricks(player, count)
+        validate_player!(player)
+        validate_trick_count!(count)
+        @tricks_won[player] = count
+        advance_to_complete if all_tricks_recorded?
         self
       end
 
@@ -134,13 +122,16 @@ module LaPodrida
       end
 
       def self.from_h(hash)
+        bids = (hash[:bids] || hash["bids"] || {}).transform_keys(&:to_s)
+        tricks_won = (hash[:tricks_won] || hash["tricks_won"] || {}).transform_keys(&:to_s)
+
         new(
-          players: hash[:players] || hash["players"],
+          players: (hash[:players] || hash["players"]).map(&:to_s),
           cards_dealt: hash[:cards_dealt] || hash["cards_dealt"],
           starting_position: hash[:starting_position] || hash["starting_position"] || 1,
           phase: (hash[:phase] || hash["phase"])&.to_sym || :bidding,
-          bids: hash[:bids] || hash["bids"] || {},
-          tricks_won: hash[:tricks_won] || hash["tricks_won"] || {}
+          bids: bids,
+          tricks_won: tricks_won
         )
       end
 

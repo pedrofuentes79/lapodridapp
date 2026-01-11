@@ -1,77 +1,84 @@
-<div class="games-show">
-  <div class="header">
-    <h1>Game #<%= @game.id %></h1>
-    <div class="actions">
-      <%= link_to "Back to Games", games_path, class: "btn" %>
-    </div>
-  </div>
+<h1>Game #<%= @game.id %></h1>
 
-  <div class="game-info">
-    <p><strong>Total Rounds:</strong> <%= @game.rounds.count %></p>
-  </div>
+<p><%= link_to "Back to Games", games_path %></p>
 
-  <div class="card">
-    <% if @players.blank? %>
-      <p>No players in this game yet.</p>
-    <% elsif @rounds.blank? %>
-      <p>No rounds yet.</p>
-    <% else %>
-      <div class="status-grid-wrapper">
-        <table class="status-grid">
-          <thead>
-            <tr>
-              <th class="round-col">Cartas a repartir</th>
-              <% @players.each do |player| %>
-                <th class="player-col"><%= player.name %></th>
-              <% end %>
-              <th class="validation-col">Estado</th>
-              <th class="asked-tricks-col">Pedidas</th>
-              <th class="made-tricks-col">Hechas</th>
-            </tr>
-          </thead>
+<% if flash[:alert] %>
+  <p style="color: red;"><%= flash[:alert] %></p>
+<% end %>
 
-          <tbody>
-            <% @rounds.each do |round| %>
-              <% bids_by_player = round.bids.index_by(&:player_id) %>
-              <% starting_player = round.starting_player %>
-              <% round_bg_class = round.has_trump? ? "" : "no-trump-bg" %>
-              <tr class="<%= round_bg_class %>">
-                <th class="round-col">
-                  <div><%= round.cards_dealt %></div>
-                  <div class="muted"><%= !round.has_trump? ? "Sin triunfo" : "" %></div>
-                </th>
+<h2>Players</h2>
+<p><%= @game.players.join(", ") %></p>
 
-                <% @players.each do |player| %>
-                  <% bid = bids_by_player[player.id] %>
-                  <% frame_id = "bid_cell_#{round.id}_#{player.id}" %>
+<% sorted_scores = @game.scores.sort_by { |_, score| -score } %>
+<% leader = sorted_scores.first&.first %>
 
-                  <% cell_classes = "status-cell" %>
-                  <% if player == starting_player %>
-                    <% cell_classes += " starting-player-cell" %>
-                  <% end %>
-                  <% cell_classes += " no-trump-bg" unless round.has_trump? %>
-
-                  <td class="<%= cell_classes %>">
-                    <%= render partial: "games/status_cell", locals: { game: @game, round: round, player: player, bid: bid, frame_id: frame_id } %>
-                  </td>
-                <% end %>
-
-                <td class="validation-cell">
-                  <% validation_frame_id = "validation_#{round.id}" %>
-                  <%= render partial: "games/validation_cell", locals: { round: round, frame_id: validation_frame_id } %>
-                </td>
-                <td class="asked-tricks-cell">
-                  <%= round.total_asked_tricks %>
-                </td>
-                <td class="made-tricks-cell">
-                  <%= round.total_made_tricks %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
+<h2>Scores</h2>
+<table border="1" cellpadding="5">
+  <tr>
+    <% sorted_scores.each do |player, _| %>
+      <th><%= player %><%= " (winner)" if @game.complete? && player == leader %></th>
     <% end %>
-  </div>
-</div>
+  </tr>
+  <tr>
+    <% sorted_scores.each do |_, score| %>
+      <td><%= score %></td>
+    <% end %>
+  </tr>
+</table>
 
+<h2>Rounds</h2>
+
+<% @game.rounds.each_with_index do |round, idx| %>
+  <h3>Round <%= idx + 1 %> (<%= round.cards_dealt %> cards)</h3>
+
+  <table border="1" cellpadding="5">
+    <tr>
+      <th>Player</th>
+      <th>Asked</th>
+      <th>Made</th>
+      <th>Points</th>
+    </tr>
+    <% round.players_in_order.each do |player| %>
+      <tr>
+        <td><%= player %></td>
+        <% input_id_asked = "r#{idx}-#{player.parameterize}-asked" %>
+        <% input_id_made = "r#{idx}-#{player.parameterize}-made" %>
+        <td>
+          <%= form_with url: bid_game_path(@game), method: :post, local: true, data: { controller: "autosubmit" } do %>
+            <input type="hidden" name="round" value="<%= idx %>">
+            <input type="hidden" name="player" value="<%= player %>">
+            <input type="hidden" name="focus" value="<%= input_id_asked %>">
+            <input type="number" name="asked" id="<%= input_id_asked %>" value="<%= round.bids[player] %>" min="0" max="<%= round.cards_dealt %>" style="width: 50px;"
+              data-action="change->autosubmit#submit keydown.enter->autosubmit#submitOnEnter"
+              <%= "autofocus" if params[:focus] == input_id_asked %>>
+            <% if round.bidding? && !round.bids[player] && round.forbidden_number %>
+              <small>(not <%= round.forbidden_number %>)</small>
+            <% end %>
+          <% end %>
+        </td>
+        <td>
+          <%= form_with url: bid_game_path(@game), method: :post, local: true, data: { controller: "autosubmit" } do %>
+            <input type="hidden" name="round" value="<%= idx %>">
+            <input type="hidden" name="player" value="<%= player %>">
+            <input type="hidden" name="focus" value="<%= input_id_made %>">
+            <input type="number" name="made" id="<%= input_id_made %>" value="<%= round.tricks_won[player] %>" min="0" max="<%= round.cards_dealt %>" style="width: 50px;"
+              data-action="change->autosubmit#submit keydown.enter->autosubmit#submitOnEnter"
+              <%= "autofocus" if params[:focus] == input_id_made %>>
+          <% end %>
+        </td>
+        <td><%= round.points_for(player) %></td>
+      </tr>
+    <% end %>
+  </table>
+
+  <% if round.complete? %>
+    <p>
+      Total asked: <%= round.total_bids %> / <%= round.cards_dealt %>
+      (<%= round.valid? ? "valid" : "invalid - tricks don't match cards" %>)
+    </p>
+  <% elsif round.bidding? %>
+    <p>Bidding phase - waiting for <%= round.current_bidder %></p>
+  <% elsif round.playing? %>
+    <p>Playing phase - record tricks for each player</p>
+  <% end %>
+<% end %>

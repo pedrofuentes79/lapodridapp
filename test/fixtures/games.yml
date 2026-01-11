@@ -1,10 +1,7 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  current_round_number: 1
+  state: '{"players": ["Alice", "Bob"], "rounds": []}'
 
 two:
-  current_round_number: 1
-
-active_game:
-  current_round_number: 1
+  state: '{"players": ["Carol", "David", "Eve"], "rounds": []}'

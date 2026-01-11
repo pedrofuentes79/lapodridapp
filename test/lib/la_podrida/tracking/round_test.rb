@@ -176,32 +176,6 @@ module LaPodrida
         end
       end
 
-      test "can change bid before phase ends" do
-        round = setup_round(player_count: 3, cards_dealt: 5)
-        round.place_bid("A", 2)
-
-        round.change_bid("A", 3)
-        assert_equal 3, round.bids["A"]
-      end
-
-      test "cannot change bid after bidding phase ends" do
-        round = setup_round(player_count: 2, cards_dealt: 5)
-        round.place_bid("A", 2)
-        round.place_bid("B", 1)
-
-        assert_raises(InvalidPhase) do
-          round.change_bid("A", 3)
-        end
-      end
-
-      test "cannot change unbid player" do
-        round = setup_round(player_count: 2, cards_dealt: 5)
-
-        assert_raises(InvalidBid) do
-          round.change_bid("A", 2)
-        end
-      end
-
       test "record tricks in playing phase" do
         round = setup_round(player_count: 2, cards_dealt: 5)
         round.place_bid("A", 2)
@@ -249,16 +223,6 @@ module LaPodrida
 
         round.record_tricks("B", 2)
         assert round.complete?
-      end
-
-      test "change tricks in playing phase" do
-        round = setup_round(player_count: 2, cards_dealt: 5)
-        round.place_bid("A", 2)
-        round.place_bid("B", 1)
-        round.record_tricks("A", 3)
-
-        round.change_tricks("A", 4)
-        assert_equal 4, round.tricks_won["A"]
       end
 
       test "points for match" do
@@ -366,6 +330,62 @@ module LaPodrida
 
         result = round.record_tricks("A", 3)
         assert_same round, result
+      end
+
+      test "correct bid works in any phase" do
+        round = setup_round(player_count: 2, cards_dealt: 5)
+        round.place_bid("A", 2)
+        round.place_bid("B", 1)
+        assert round.playing?
+
+        round.correct_bid("A", 4)
+        assert_equal 4, round.bids["A"]
+      end
+
+      test "correct bid allows forbidden number" do
+        round = setup_round(player_count: 3, cards_dealt: 5)
+        round.place_bid("A", 2)
+        round.place_bid("B", 1)
+        round.place_bid("C", 0)
+
+        round.correct_bid("C", 2)
+        assert_equal 2, round.bids["C"]
+      end
+
+      test "correct bid advances phase when all bids placed" do
+        round = setup_round(player_count: 2, cards_dealt: 5)
+        assert round.bidding?
+
+        round.correct_bid("A", 2)
+        assert round.bidding?
+
+        round.correct_bid("B", 1)
+        assert round.playing?
+      end
+
+      test "correct tricks works in any phase" do
+        round = setup_round(player_count: 2, cards_dealt: 5)
+        round.place_bid("A", 2)
+        round.place_bid("B", 1)
+        round.record_tricks("A", 3)
+        round.record_tricks("B", 2)
+        assert round.complete?
+
+        round.correct_tricks("A", 2)
+        assert_equal 2, round.tricks_won["A"]
+      end
+
+      test "correct tricks advances phase when all tricks recorded" do
+        round = setup_round(player_count: 2, cards_dealt: 5)
+        round.place_bid("A", 2)
+        round.place_bid("B", 1)
+        assert round.playing?
+
+        round.correct_tricks("A", 3)
+        assert round.playing?
+
+        round.correct_tricks("B", 2)
+        assert round.complete?
       end
     end
   end
