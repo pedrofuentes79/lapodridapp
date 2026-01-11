@@ -16,7 +16,7 @@
 <table border="1" cellpadding="5">
   <tr>
     <% sorted_scores.each do |player, _| %>
-      <th><%= player %><%= " (winner)" if @game.complete? && player == leader %></th>
+      <th><%= player %><%= " 🏆" if @game.complete? && player == leader %></th>
     <% end %>
   </tr>
   <tr>
@@ -74,11 +74,11 @@
   <% if round.complete? %>
     <p>
       Total asked: <%= round.total_bids %> / <%= round.cards_dealt %>
-      (<%= round.valid? ? "valid" : "invalid - tricks don't match cards" %>)
+      <%= round.valid? ? "✅" : "❌" %>
     </p>
   <% elsif round.bidding? %>
-    <p>Bidding phase - waiting for <%= round.current_bidder %></p>
+    <p>🗣️ Bidding - waiting for <%= round.current_bidder %></p>
   <% elsif round.playing? %>
-    <p>Playing phase - record tricks for each player</p>
+    <p>🃏 Playing - record tricks</p>
   <% end %>
 <% end %>
