@@ -1,0 +1,49 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+alice_round_one:
+  round: round_one
+  player: alice
+  predicted_tricks: 3
+  actual_tricks: 3
+
+bob_round_one:
+  round: round_one
+  player: bob
+  predicted_tricks: 2
+  actual_tricks: 1
+
+charlie_round_one:
+  round: round_one
+  player: charlie
+  predicted_tricks: 1
+  actual_tricks: 2
+
+alice_round_two:
+  round: round_two
+  player: alice
+  predicted_tricks: 2
+  actual_tricks: 2
+
+bob_round_two:
+  round: round_two
+  player: bob
+  predicted_tricks: 0
+  actual_tricks: 0
+
+dave_round_three:
+  round: round_three
+  player: dave
+  predicted_tricks: 3
+  actual_tricks:
+
+emma_active:
+  round: active_round
+  player: emma
+  predicted_tricks: 4
+  actual_tricks:
+
+frank_active:
+  round: active_round
+  player: frank
+  predicted_tricks:
+  actual_tricks:

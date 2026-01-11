@@ -1,0 +1,77 @@
+<div class="games-show">
+  <div class="header">
+    <h1>Game #<%= @game.id %></h1>
+    <div class="actions">
+      <%= link_to "Back to Games", games_path, class: "btn" %>
+    </div>
+  </div>
+
+  <div class="game-info">
+    <p><strong>Total Rounds:</strong> <%= @game.rounds.count %></p>
+  </div>
+
+  <div class="card">
+    <% if @players.blank? %>
+      <p>No players in this game yet.</p>
+    <% elsif @rounds.blank? %>
+      <p>No rounds yet.</p>
+    <% else %>
+      <div class="status-grid-wrapper">
+        <table class="status-grid">
+          <thead>
+            <tr>
+              <th class="round-col">Cartas a repartir</th>
+              <% @players.each do |player| %>
+                <th class="player-col"><%= player.name %></th>
+              <% end %>
+              <th class="validation-col">Estado</th>
+              <th class="asked-tricks-col">Pedidas</th>
+              <th class="made-tricks-col">Hechas</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% @rounds.each do |round| %>
+              <% bids_by_player = round.bids.index_by(&:player_id) %>
+              <% starting_player = round.starting_player %>
+              <% round_bg_class = round.has_trump? ? "" : "no-trump-bg" %>
+              <tr class="<%= round_bg_class %>">
+                <th class="round-col">
+                  <div><%= round.cards_dealt %></div>
+                  <div class="muted"><%= !round.has_trump? ? "Sin triunfo" : "" %></div>
+                </th>
+
+                <% @players.each do |player| %>
+                  <% bid = bids_by_player[player.id] %>
+                  <% frame_id = "bid_cell_#{round.id}_#{player.id}" %>
+
+                  <% cell_classes = "status-cell" %>
+                  <% if player == starting_player %>
+                    <% cell_classes += " starting-player-cell" %>
+                  <% end %>
+                  <% cell_classes += " no-trump-bg" unless round.has_trump? %>
+
+                  <td class="<%= cell_classes %>">
+                    <%= render partial: "games/status_cell", locals: { game: @game, round: round, player: player, bid: bid, frame_id: frame_id } %>
+                  </td>
+                <% end %>
+
+                <td class="validation-cell">
+                  <% validation_frame_id = "validation_#{round.id}" %>
+                  <%= render partial: "games/validation_cell", locals: { round: round, frame_id: validation_frame_id } %>
+                </td>
+                <td class="asked-tricks-cell">
+                  <%= round.total_asked_tricks %>
+                </td>
+                <td class="made-tricks-cell">
+                  <%= round.total_made_tricks %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+</div>
+

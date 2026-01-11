@@ -1,0 +1,26 @@
+<div class="games-index">
+  <div class="header">
+    <h1>Games</h1>
+    <%= link_to "New Game", new_game_path, class: "btn btn-primary" %>
+  </div>
+
+  <% if @games.any? %>
+    <div class="games-list">
+      <% @games.each do |game| %>
+        <div class="game-card">
+          <h2><%= link_to "Game ##{game.id}", game %></h2>
+          <p>Players: <%= game.players.count %></p>
+          <p>Rounds: <%= game.rounds.count %></p>
+          <p>Current Round: <%= game.current_round_number %></p>
+          <div class="actions">
+            <%= link_to "View", game, class: "btn" %>
+            <%= button_to "Delete", game, method: :delete, class: "btn btn-danger", data: { turbo_confirm: "Are you sure?" } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p>No games yet. <%= link_to "Create one", new_game_path %> to get started!</p>
+  <% end %>
+</div>
+

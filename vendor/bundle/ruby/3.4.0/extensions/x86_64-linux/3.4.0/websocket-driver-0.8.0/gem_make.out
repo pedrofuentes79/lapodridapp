@@ -1,0 +1,18 @@
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+/usr/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-x3668p sitelibdir\=./.gem.20251210-15356-x3668p clean
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-x3668p sitelibdir\=./.gem.20251210-15356-x3668p
+compiling websocket_mask.c
+linking shared-object websocket_mask.so
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-x3668p sitelibdir\=./.gem.20251210-15356-x3668p install
+/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20251210-15356-x3668p
+
+current directory: /home/pedrofuentes79/Projects/lapodridappv2/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
+make DESTDIR\= sitearchdir\=./.gem.20251210-15356-x3668p sitelibdir\=./.gem.20251210-15356-x3668p clean

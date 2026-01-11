@@ -1,0 +1,88 @@
+<div class="game-new">
+  <div class="header">
+    <h1>New Game</h1>
+    <%= link_to "Back", games_path, class: "btn" %>
+  </div>
+
+  <% if @game.errors.any? %>
+    <div class="alert">
+      <p><strong>Please fix the following:</strong></p>
+      <ul>
+        <% @game.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with url: games_path,
+    method: :post,
+    data: { controller: "autosubmit", action: "input->autosubmit#schedule change->autosubmit#schedule" } do %>
+    <div class="game-new-sections">
+      <div class="card">
+        <h2>Players</h2>
+        <p>Player count: <strong><%= @player_count %></strong></p>
+
+        <div class="players-grid" data-controller="players-form" data-players-form-target="list">
+          <% @players_params.each_with_index do |player, idx| %>
+            <div class="player-row" data-player-row="true">
+              <div class="player-input">
+                <%= label_tag "players_#{idx}_name", "Player #{idx + 1}" %>
+                <%= text_field_tag "players[#{idx}][name]",
+                  player[:name].to_s,
+                  id: "players_#{idx}_name",
+                  autocomplete: "off",
+                  data: { players_form_target: "input", action: "keydown.enter->players-form#maybeAdd" }
+                %>
+              </div>
+
+              <%= button_tag "+",
+                type: "button",
+                class: "btn btn-small",
+                title: "Add player",
+                style: (idx == @players_params.length - 1 ? "" : "display:none"),
+                data: { add_player_button: true, action: "players-form#addRow" }
+              %>
+
+              <%= button_tag type: "button",
+                class: "btn btn-danger btn-icon",
+                title: "Remove player",
+                aria: { label: "Remove player" },
+                data: { action: "players-form#removeRow" } do %>
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2Zm1 6h2v10h-2V9Zm4 0h2v10h-2V9ZM7 9h2v10H7V9Zm1 13a2 2 0 0 1-2-2V8h12v12a2 2 0 0 1-2 2H8Z"/>
+                </svg>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card" data-controller="rounds-form">
+        <div class="header-row">
+          <h2>Rounds</h2>
+          <div class="actions">
+            <%= button_tag "Add round", type: "button", data: { action: "rounds-form#addRow" }, class: "btn" %>
+            <%= submit_tag "",
+              formaction: preview_games_path,
+              formmethod: "post",
+              formnovalidate: true,
+              data: { autosubmit_target: "submitter", turbo_frame: "rounds_fields", turbo_stream: true },
+              style: "display:none"
+            %>
+          </div>
+        </div>
+
+        <%= turbo_frame_tag "rounds_fields" do %>
+          <%= render "rounds_fields", rounds_params: @rounds_params, player_count: @player_count %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="actions">
+      <%= submit_tag "Create Game", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>
+
+

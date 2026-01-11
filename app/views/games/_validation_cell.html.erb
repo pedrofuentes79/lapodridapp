@@ -1,0 +1,10 @@
+<%= turbo_frame_tag frame_id do %>
+  <% if round.valid_state? %>
+    ✓
+  <% elsif !round.all_players_made_tricks? %>
+    &nbsp;
+  <% else %>
+    ✗
+  <% end %>
+<% end %>
+

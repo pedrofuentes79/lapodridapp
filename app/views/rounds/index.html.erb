@@ -1,0 +1,18 @@
+<div class="rounds-index">
+  <h1>Rounds for <%= link_to "Game ##{@game.id}", @game %></h1>
+
+  <% if @rounds.any? %>
+    <div class="rounds-list">
+      <% @rounds.each do |round| %>
+        <div class="round-card">
+          <h2><%= link_to "Round #{round.round_number}", [@game, round] %></h2>
+          <p>Cards Dealt: <%= round.cards_dealt %></p>
+          <p>Status: <%= round.valid_state? ? "✓ Valid" : "⚠ Invalid" %></p>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p>No rounds yet.</p>
+  <% end %>
+</div>
+
