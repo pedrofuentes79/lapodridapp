@@ -14,9 +14,7 @@
         <small><%= game.complete? ? "Terminada" : "Ronda #{game.current_round_number}" %></small>
       </header>
       <p><%= game.players.join(", ") %></p>
-      <footer>
-        <%= button_to "Eliminar", game, method: :delete, class: "secondary outline", data: { turbo_confirm: "¿Eliminar esta partida?" } %>
-      </footer>
+      <p><small>Hace <%= time_tag(game.created_at, time_ago_in_words(game.created_at)) %></small></p>
     </article>
   <% end %>
 <% else %>
