@@ -3,9 +3,9 @@ module LaPodrida
     class Round
       PHASES = %i[bidding playing complete].freeze
 
-      attr_reader :players, :cards_dealt, :starting_position, :bids, :tricks_won, :phase
+      attr_reader :players, :cards_dealt, :starting_position, :bids, :tricks_won, :phase, :has_trump
 
-      def initialize(players:, cards_dealt:, starting_position: 1, phase: :bidding, bids: {}, tricks_won: {})
+      def initialize(players:, cards_dealt:, starting_position: 1, phase: :bidding, bids: {}, tricks_won: {}, has_trump: true)
         raise ArgumentError, "players cannot be empty" if players.empty?
         raise ArgumentError, "cards_dealt must be positive" if cards_dealt < 1
 
@@ -15,6 +15,7 @@ module LaPodrida
         @phase = phase
         @bids = bids
         @tricks_won = tricks_won
+        @has_trump = has_trump
       end
 
       def players_in_order
@@ -117,7 +118,8 @@ module LaPodrida
           starting_position: starting_position,
           phase: phase,
           bids: bids.dup,
-          tricks_won: tricks_won.dup
+          tricks_won: tricks_won.dup,
+          has_trump: has_trump
         }
       end
 
@@ -131,7 +133,8 @@ module LaPodrida
           starting_position: hash[:starting_position] || hash["starting_position"] || 1,
           phase: (hash[:phase] || hash["phase"])&.to_sym || :bidding,
           bids: bids,
-          tricks_won: tricks_won
+          tricks_won: tricks_won,
+          has_trump: hash.key?(:has_trump) ? hash[:has_trump] : (hash.key?("has_trump") ? hash["has_trump"] : true)
         )
       end
 

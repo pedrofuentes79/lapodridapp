@@ -20,7 +20,8 @@ module LaPodrida
         round = Round.new(
           players:,
           cards_dealt:,
-          starting_position:
+          starting_position:,
+          has_trump:
         )
         @rounds << round
         round

@@ -316,6 +316,27 @@ module LaPodrida
         assert_equal({ "A" => 2, "B" => 1 }, round.bids)
       end
 
+      test "from_h preserves has_trump false" do
+        hash = {
+          "players" => player_names(2),
+          "cards_dealt" => 5,
+          "has_trump" => false
+        }
+
+        round = Round.from_h(hash)
+        assert_equal false, round.has_trump
+      end
+
+      test "from_h defaults has_trump to true" do
+        hash = {
+          "players" => player_names(2),
+          "cards_dealt" => 5
+        }
+
+        round = Round.from_h(hash)
+        assert_equal true, round.has_trump
+      end
+
       test "place bid returns self" do
         round = setup_round(player_count: 2, cards_dealt: 5)
         result = round.place_bid("A", 2)
