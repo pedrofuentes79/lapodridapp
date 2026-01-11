@@ -1,0 +1,25 @@
+<%# locals: (name:, value:, max:, forbidden: nil, game:, round_idx:, player:) %>
+<%= form_with url: bid_game_path(game), method: :post, data: { controller: "picker", turbo_stream: true } do %>
+  <input type="hidden" name="round" value="<%= round_idx %>">
+  <input type="hidden" name="player" value="<%= player %>">
+  <input type="hidden" name="<%= name %>" value="<%= value %>" data-picker-target="input">
+
+  <button type="button" class="picker-trigger" data-action="picker#toggle">
+    <span data-picker-target="display"><%= value.present? ? value : "-" %></span>
+  </button>
+
+  <div popover class="picker-popover" data-picker-target="popover">
+    <div class="picker-grid">
+      <% (0..max).each do |n| %>
+        <% is_forbidden = n == forbidden %>
+        <button type="button"
+                class="picker-option <%= 'selected' if n == value %> <%= 'forbidden' if is_forbidden %>"
+                data-action="picker#pick"
+                data-value="<%= n %>"
+                <%= 'disabled' if is_forbidden %>>
+          <%= n %><%= " ✗" if is_forbidden %>
+        </button>
+      <% end %>
+    </div>
+  </div>
+<% end %>
