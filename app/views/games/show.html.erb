@@ -1,18 +1,18 @@
-<h1>Game #<%= @game.id %></h1>
+<h1>Partida #<%= @game.id %></h1>
 
-<p><%= link_to "Back to Games", games_path %></p>
+<p><%= link_to "Volver a partidas", games_path %></p>
 
 <% if flash[:alert] %>
   <p style="color: red;"><%= flash[:alert] %></p>
 <% end %>
 
-<h2>Players</h2>
+<h2>Jugadores</h2>
 <p><%= @game.players.join(", ") %></p>
 
 <% sorted_scores = @game.scores.sort_by { |_, score| -score } %>
 <% leader = sorted_scores.first&.first %>
 
-<h2>Scores</h2>
+<h2>Puntajes</h2>
 <table border="1" cellpadding="5">
   <tr>
     <% sorted_scores.each do |player, _| %>
@@ -26,17 +26,17 @@
   </tr>
 </table>
 
-<h2>Rounds</h2>
+<h2>Rondas</h2>
 
 <% @game.rounds.each_with_index do |round, idx| %>
-  <h3>Round <%= idx + 1 %> (<%= round.cards_dealt %> cards)</h3>
+  <h3>Ronda <%= idx + 1 %> (<%= round.cards_dealt %> <%= round.cards_dealt == 1 ? "carta" : "cartas" %>)</h3>
 
   <table border="1" cellpadding="5">
     <tr>
-      <th>Player</th>
-      <th>Asked</th>
-      <th>Made</th>
-      <th>Points</th>
+      <th>Jugador</th>
+      <th>Pedidas</th>
+      <th>Hechas</th>
+      <th>Puntos</th>
     </tr>
     <% round.players_in_order.each do |player| %>
       <tr>
@@ -52,7 +52,7 @@
               data-action="change->autosubmit#submit keydown.enter->autosubmit#submitOnEnter"
               <%= "autofocus" if params[:focus] == input_id_asked %>>
             <% if round.bidding? && !round.bids[player] && round.forbidden_number %>
-              <small>(not <%= round.forbidden_number %>)</small>
+              <small>(no el <%= round.forbidden_number %>)</small>
             <% end %>
           <% end %>
         </td>
@@ -73,12 +73,12 @@
 
   <% if round.complete? %>
     <p>
-      Total asked: <%= round.total_bids %> / <%= round.cards_dealt %>
+      Total pedidas: <%= round.total_bids %> / <%= round.cards_dealt %>
       <%= round.valid? ? "✅" : "❌" %>
     </p>
   <% elsif round.bidding? %>
-    <p>🗣️ Bidding - waiting for <%= round.current_bidder %></p>
+    <p>🗣️ Pidiendo - esperando a <%= round.current_bidder %></p>
   <% elsif round.playing? %>
-    <p>🃏 Playing - record tricks</p>
+    <p>🃏 Jugando - registrar bazas</p>
   <% end %>
 <% end %>

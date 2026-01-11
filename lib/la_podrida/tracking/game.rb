@@ -7,7 +7,7 @@ module LaPodrida
       attr_reader :players, :rounds
 
       def initialize(players:, rounds: [])
-        raise ArgumentError, "Need at least 2 players" if players.size < 2
+        raise ArgumentError, "Se necesitan al menos 2 jugadores" if players.size < 2
 
         @players = players.freeze
         @rounds = rounds
@@ -93,7 +93,7 @@ module LaPodrida
         max = max_cards_per_player(has_trump:)
         return if cards_dealt.positive? && cards_dealt <= max
 
-        raise ArgumentError, "cards_dealt must be between 1 and #{max}"
+        raise ArgumentError, "Las cartas deben estar entre 1 y #{max}"
       end
     end
   end

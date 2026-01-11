@@ -1,6 +1,6 @@
-<h1>Games</h1>
+<h1>Partidas</h1>
 
-<p><%= link_to "New Game", new_game_path %></p>
+<p><%= link_to "Nueva partida", new_game_path %></p>
 
 <% if flash[:alert] %>
   <p style="color: red;"><%= flash[:alert] %></p>
@@ -12,11 +12,11 @@
       <li>
         <%= link_to "##{game.id}", game %>
         (<%= game.players.join(", ") %>)
-        - <%= game.complete? ? "Complete" : "Round #{game.current_round_number}" %>
-        <%= button_to "Delete", game, method: :delete, data: { turbo_confirm: "Delete this game?" } %>
+        - <%= game.complete? ? "Terminada" : "Ronda #{game.current_round_number}" %>
+        <%= button_to "Eliminar", game, method: :delete, data: { turbo_confirm: "¿Eliminar esta partida?" } %>
       </li>
     <% end %>
   </ul>
 <% else %>
-  <p>No games yet.</p>
+  <p>No hay partidas.</p>
 <% end %>

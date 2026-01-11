@@ -6,13 +6,13 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     get games_path
     assert_response :success
-    assert_select "h1", "Games"
+    assert_select "h1", "Partidas"
   end
 
   test "new shows form" do
     get new_game_path
     assert_response :success
-    assert_select "h1", "New Game"
+    assert_select "h1", "Nueva partida"
     assert_select "input[name=players]"
     assert_select "input[name=cards]"
   end
@@ -40,7 +40,7 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to new_game_path
-    assert_equal "Need at least 2 players", flash[:alert]
+    assert_equal "Se necesitan al menos 2 jugadores", flash[:alert]
   end
 
   test "show displays game" do
@@ -48,8 +48,9 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
 
     get game_path(game)
     assert_response :success
-    assert_select "h1", "Game ##{game.id}"
-    assert_select "p", /Alice, Bob/
+    assert_select "h1", "Partida ##{game.id}"
+    assert_select "th", "Alice"
+    assert_select "th", "Bob"
   end
 
   test "destroy deletes game" do
@@ -115,6 +116,6 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to game
-    assert_match(/forbidden/i, flash[:alert])
+    assert_match(/prohibido/i, flash[:alert])
   end
 end

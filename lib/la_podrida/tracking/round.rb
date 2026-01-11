@@ -6,8 +6,8 @@ module LaPodrida
       attr_reader :players, :cards_dealt, :starting_position, :bids, :tricks_won, :phase
 
       def initialize(players:, cards_dealt:, starting_position: 1, phase: :bidding, bids: {}, tricks_won: {})
-        raise ArgumentError, "players cannot be empty" if players.empty?
-        raise ArgumentError, "cards_dealt must be positive" if cards_dealt < 1
+        raise ArgumentError, "Se necesitan jugadores" if players.empty?
+        raise ArgumentError, "Las cartas deben ser positivas" if cards_dealt < 1
 
         @players = players.freeze
         @cards_dealt = cards_dealt
@@ -140,29 +140,29 @@ module LaPodrida
       def validate_phase!(expected)
         return if phase == expected
 
-        raise InvalidPhase, "Expected #{expected} phase, currently in #{phase}"
+        raise InvalidPhase, "Se esperaba fase #{expected}, actualmente en #{phase}"
       end
 
       def validate_player!(player)
         return if players.include?(player)
 
-        raise ArgumentError, "Unknown player: #{player}"
+        raise ArgumentError, "Jugador desconocido: #{player}"
       end
 
       def validate_bid_count!(count)
-        raise InvalidBid, "Bid must be non-negative" if count.negative?
-        raise InvalidBid, "Bid cannot exceed cards dealt (#{cards_dealt})" if count > cards_dealt
+        raise InvalidBid, "No se puede pedir un número negativo" if count.negative?
+        raise InvalidBid, "No se puede pedir más de #{cards_dealt}" if count > cards_dealt
       end
 
       def validate_trick_count!(count)
-        raise InvalidTrickCount, "Tricks must be non-negative" if count.negative?
-        raise InvalidTrickCount, "Tricks cannot exceed cards dealt (#{cards_dealt})" if count > cards_dealt
+        raise InvalidTrickCount, "Las bazas no pueden ser negativas" if count.negative?
+        raise InvalidTrickCount, "Las bazas no pueden superar #{cards_dealt}" if count > cards_dealt
       end
 
       def validate_not_forbidden!(player, count)
         return unless last_bidder?(player) && forbidden?(count)
 
-        raise ForbiddenBidError, "Cannot bid #{count} - it's the forbidden number"
+        raise ForbiddenBidError, "No podés pedir #{count} - es el número prohibido"
       end
 
       def forbidden?(count)
